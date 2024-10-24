@@ -17,10 +17,11 @@ from functions.getProxy import *
 from functions.getUserAgent import *
 
 def getInseratDetails(url):
-    
+    chrome_driver_path = "/usr/local/bin/chromedriver"
+    driver = None
     try:
         start_time = time.time()
- 
+
         proxy = getProxy()
 
         prox_options = {
@@ -35,7 +36,7 @@ def getInseratDetails(url):
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--user-agent='+GET_UA())
         options.add_argument('--incognito')
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options, seleniumwire_options=prox_options)
+        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options, seleniumwire_options=prox_options)
 
         driver.get(url)
 
@@ -78,7 +79,6 @@ def getInseratDetails(url):
             return(imgSrcArr)
 
         imgSrcArr1 = getImages(url)
-        
 
         tagsSrcDivs = driver.find_elements(By.CLASS_NAME, 'breadcrump-link')
         tagsSrcArr = []
@@ -104,7 +104,7 @@ def getInseratDetails(url):
             adId = "0"
 
         data = {'title':title, 'price': price, 'images':imgSrcArr1, 'tags':tagsSrcArr, 'views':views, 'description':description, 'uploadDate':uploadDate, 'adId':adId}
-        
+
         end_time = time.time()
 
         print("getInseratDetails.py execution:")

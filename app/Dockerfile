@@ -10,6 +10,13 @@ RUN wget -nc https://dl.google.com/linux/direct/google-chrome-stable_current_amd
 RUN apt-get -y update
 # Installing Google Chrome
 RUN apt-get -y install -f ./google-chrome-stable_current_amd64.deb
+# Download Chrome Driver for installed Google Chrome version
+RUN wget -N "https://storage.googleapis.com/chrome-for-testing-public/$(google-chrome --version | awk '{print $3}')/linux64/chromedriver-linux64.zip" && \
+    unzip chromedriver-linux64.zip -d /usr/local/bin/ && \
+    rm chromedriver-linux64.zip && \
+    mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
+    rm -r /usr/local/bin/chromedriver-linux64 && \
+    chmod +x /usr/local/bin/chromedriver
 
 # Exposing our app port in docker internal network
 EXPOSE 80
