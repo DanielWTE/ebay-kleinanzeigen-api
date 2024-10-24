@@ -16,9 +16,9 @@ import time
 from functions.getProxy import *
 from functions.getUserAgent import *
 
-
 def scrapeInserateUrls():
-
+    chrome_driver_path = '/usr/local/bin/chromedriver'
+    driver = None
     try:
         start_time = time.time()
 
@@ -38,7 +38,7 @@ def scrapeInserateUrls():
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--user-agent='+GET_UA())
         options.add_argument('--incognito')
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options, seleniumwire_options=prox_options)
+        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options, seleniumwire_options=prox_options)
 
         driver.get(url)
 
