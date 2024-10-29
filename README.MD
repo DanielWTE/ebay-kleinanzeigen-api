@@ -15,6 +15,8 @@
     This tool acts as an API interface, you can use it to get random listings from Ebay-Kleinanzeigen.de, exact data from specific listings and even views of listings. 
     <br />
     <a href="https://dwag.me/project/scraper"><strong>Explore the docs »</strong></a>
+    <br/>
+    <a href="https://adspy.one"><strong>Search agents and hosted scraper API »</strong></a>
     <br />
     <br />
     ·
