@@ -1,82 +1,73 @@
-<a name="readme-top"></a>
+# Ebay Kleinanzeigen API
 
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 
-
-<br />
 <div align="center">
-
-<h3 align="center">Ebay Kleinanzeigen API</h3>
+  <h3 align="center">Ebay Kleinanzeigen API</h3>
 
   <p align="center">
-    This tool acts as an API interface, you can use it to get random listings from Ebay-Kleinanzeigen.de, exact data from specific listings and even views of listings. 
+    A powerful API interface for Ebay-Kleinanzeigen.de that enables you to fetch listings, specific data, and view information.
+  </p>
+
+  <p align="center">
+    <b>🚀 Looking for a ready-to-use solution?</b>
     <br />
-    <a href="https://dwag.me/project/scraper"><strong>Explore the docs »</strong></a>
-    <br/>
-    <a href="https://adspy.one"><strong>Search agents and hosted scraper API »</strong></a>
+    Try it at <a href="https://adspy.one"><strong>adspy.one »</strong></a>
     <br />
+    ✓ Automated Search Agents
     <br />
-    ·
+    🔜 Hosted Scraper API (Coming Soon)
+    <br />
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Report Bug</a>
     ·
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Request Feature</a>
   </p>
 </div>
 
-
 ### Built With
-
 * [![Python][Python]][Python-url]
 * [![Docker][Docker]][Docker-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 ## Getting Started
 
-First of all, you need to clone the project.
-Go to your folder where you want to clone the project and run the following command:
+### Want to skip the setup?
+Visit [adspy.one](https://adspy.one) for our hosted solution with additional features and zero configuration required.
 
+### Self-Hosting Instructions
+First, clone the project to your desired location:
 ```sh
 git clone https://github.com/DanielWTE/ebay-kleinanzeigen-api.git
 ```
 
 ### Prerequisites
-
-Now, install Docker and Docker Compose on your machine. You can find the installation instructions for your operating system here:
+Install Docker and Docker Compose on your machine:
 [Get Docker](https://docs.docker.com/get-docker/)
-
-(This project (for now) is not tested on Windows, only on Linux Ubuntu 22.04)
+(Note: This project is currently tested on Linux Ubuntu 22.04)
 
 ### Installation
-
-1. Check if the folder is named "ebay-kleinanzeigen-api", if not you need to change the nginx.conf file in the nginx folder.
-2. Add HTTP proxies to this file: ebay-kleinanzeigen-api/app/functions/getProxy.py (you will find a comment there)
-3. You're ready to go, just run the following command in the root folder of the project:
-
+1. Verify the folder is named "ebay-kleinanzeigen-api" (required for nginx.conf)
+2. Add HTTP proxies to: ebay-kleinanzeigen-api/app/functions/getProxy.py (see comments)
+3. Launch the service:
 ```sh
 docker-compose up --build -d --scale app=3
 ```
-
-With this command, you start 3 replicas of the API. You can change the number of replicas to your liking. (max 20 due to NGINX config)
+This command starts 3 API replicas. Adjust the number as needed (max 20 due to NGINX config).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 ## Usage
-
-Simple: Just send a GET request to the API.
-
-You can use the API in your own projects or just use it to get random listings from Ebay-Kleinanzeigen.de. You can find the documentation or examples here: [Documentation](https://dwag.me/project/scraper)
+Send GET requests to interact with the API. For detailed documentation and examples, visit:
+- [Professional Hosted Solution](https://adspy.one)
+- [Self-Hosted Documentation](https://dwag.me/project/scraper)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## License
-
 Distributed under the MIT License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
