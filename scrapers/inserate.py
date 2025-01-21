@@ -1,30 +1,65 @@
+from urllib.parse import urlencode
+
 from fastapi import HTTPException
+
 from utils.browser import PlaywrightManager
 
-async def get_inserate_klaz(browser_manager: PlaywrightManager, page_count: int):
+
+async def get_inserate_klaz(browser_manager: PlaywrightManager,
+                            query: str = None,
+                            location: str = None,
+                            radius: int = None,
+                            min_price: int = None,
+                            max_price: int = None,
+                            page_count: int = 1):
+    base_url = "https://www.ebay-kleinanzeigen.de"
+
+    # Build the price filter part of the path
+    price_path = ""
+    if min_price is not None or max_price is not None:
+        # Convert prices to strings; if one is None, leave its place empty
+        min_price_str = str(min_price) if min_price is not None else ""
+        max_price_str = str(max_price) if max_price is not None else ""
+        price_path = f"/preis:{min_price_str}:{max_price_str}"
+
+    # Build the search path with price and page information
+    search_path = f"{price_path}/s-seite"
+    search_path += ":{page}"
+
+    # Build query parameters as before
+    params = {}
+    if query:
+        params['keywords'] = query
+    if location:
+        params['locationStr'] = location
+    if radius:
+        params['radius'] = radius
+
+    # Construct the full URL and get it
+    search_url = base_url + search_path + ("?" + urlencode(params) if params else "")
+
     page = await browser_manager.new_context_page()
     try:
-        await page.goto("https://www.kleinanzeigen.de/s-seite:1", timeout=120000)
+        await page.goto(search_url.format(page=1), timeout=120000)
         results = []
-        
+
         for i in range(page_count):
             page_results = await get_ads(page)
             results.extend(page_results)
-            
+
             if i < page_count - 1:
-                next_page_url = f"https://www.kleinanzeigen.de/s-seite:{i+2}"
                 try:
-                    await page.goto(next_page_url, timeout=120000)
+                    await page.goto(search_url.format(page=i+2), timeout=120000)
                     await page.wait_for_load_state("networkidle")
                 except Exception as e:
-                    print(f"Failed to load page {i+2}: {str(e)}")
+                    print(f"Failed to load page {i + 2}: {str(e)}")
                     break
-        
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await browser_manager.close_page(page)
+
 
 async def get_ads(page):
     try:
@@ -40,4 +75,4 @@ async def get_ads(page):
                     results.append({"adid": data_adid, "url": data_href})
         return results
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
