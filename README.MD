@@ -57,13 +57,50 @@ The API will be available at `http://localhost:8000`
 
 ### API Endpoints
 
-- `GET /inserate?page_count=5` - Fetch listings (default: 1 page, max: 20 pages)
-- `GET /inserat/{id}` - Fetch details for a specific listing
+#### 1. Fetch Listings
+**Endpoint:** `GET /inserate`
+
+**Description:** Retrieves a list of listings based on search criteria.
+
+##### Query Parameters:
+- **`query`** *(string, optional)*: The search term (e.g., "fahrrad" to search for bicycles).
+- **`location`** *(string, optional)*: The location or postal code to narrow the search (e.g., `10178` for Berlin).
+- **`radius`** *(integer, optional)*: The search radius in kilometers from the specified location (e.g., `5` for a 5 km radius).
+- **`min_price`** *(integer, optional)*: The minimum price in Euros for the listings (e.g., `200` for at least 200 Euros).
+- **`max_price`** *(integer, optional)*: The maximum price in Euros for the listings (e.g., `500` for at most 500 Euros).
+- **`page_count`** *(integer, optional)*: The number of pages to search or return (e.g., `5` for the first 5 pages, default is 1, max: 20 pages).
+
+##### Example Request:
+```http
+GET /inserate?query=fahrrad&location=10178&radius=5&min_price=200&page_count=5
+```
+
+#### 2. Fetch Listing Details
+**Endpoint:** `GET /inserat/{id}`
+
+**Description:** Retrieves detailed information about a specific listing.
+
+##### Path Parameters:
+- **`id`** *(string)*: The unique identifier of the listing to fetch details for.
+
+##### Example Request:
+```http
+GET /inserat/12345
+```
+
 
 ### Documentation
 
 #### API Response Format
 All API endpoints return responses in the following JSON format:
+```json
+{
+  "success": true,
+  "data": [
+    ...
+  ]
+}
+```
 
 API documentation is available at `http://localhost:8000/docs` when running locally.
 
