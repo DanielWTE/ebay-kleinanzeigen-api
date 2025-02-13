@@ -10,7 +10,7 @@
   <p align="center">
     <b>🚀 Looking for a ready-to-use solution?</b>
     <br />
-    Try it at <a href="https://adspy.one"><strong>adspy.one »</strong></a>
+    Try it at <a href="https://kleinanzeigen-agent.de"><strong>kleinanzeigen-agent.de »</strong></a>
     <br />
     ✓ Automated Search Agents
     <br />
@@ -27,7 +27,7 @@
 ## Getting Started
 
 ### Want to skip the setup?
-Visit [adspy.one](https://adspy.one) for our hosted solution with additional features and zero configuration required.
+Visit [kleinanzeigen-agent.de](https://kleinanzeigen-agent.de) for our hosted solution with additional features and zero configuration required.
 
 ### Prerequisites
 - Python 3.12 or higher
