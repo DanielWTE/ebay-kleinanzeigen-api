@@ -1,35 +1,39 @@
-async def get_element_content(page, selector, default=None):
-    element = await page.query_selector(selector)
+from typing import Dict, List, Optional, Union, Any
+from playwright.async_api import Page, ElementHandle
+
+
+async def get_element_content(page: Page, selector: str, default: Any = None) -> Optional[str]:
+    element: Optional[ElementHandle] = await page.query_selector(selector)
     if element:
         return await element.inner_text()
     return default
 
 
-async def get_elements_content(page, selector):
-    elements = await page.query_selector_all(selector)
+async def get_elements_content(page: Page, selector: str) -> List[str]:
+    elements: List[ElementHandle] = await page.query_selector_all(selector)
     return [await element.text_content() for element in elements]
 
 
-async def get_image_sources(page, selector):
-    images = []
-    image_element = await page.query_selector(selector)
+async def get_image_sources(page: Page, selector: str) -> List[str]:
+    images: List[str] = []
+    image_element: Optional[ElementHandle] = await page.query_selector(selector)
     if image_element:
-        src = await image_element.get_attribute("src")
+        src: Optional[str] = await image_element.get_attribute("src")
         if src:
             images.append(src)
     return images
 
 
-def parse_price(price_text):
+def parse_price(price_text: Optional[str]) -> Dict[str, Union[str, bool]]:
     if not price_text:
         return {"amount": "0", "currency": "€", "negotiable": False}
 
     price_text = price_text.strip()
-    negotiable = "VB" in price_text
+    negotiable: bool = "VB" in price_text
 
     price_text = price_text.replace("VB", "").strip()
 
-    amount = price_text.replace("€", "").replace(".", "").replace(",", ".").strip()
+    amount: str = price_text.replace("€", "").replace(".", "").replace(",", ".").strip()
 
     return {
         "amount": amount,
@@ -38,47 +42,58 @@ def parse_price(price_text):
     }
 
 
-async def get_seller_details(seller_card, page):
-    if not seller_card:
-        return {
-            "name": None,
-            "since": None,
-            "type": "private"
-        }
-
-    seller_name = await get_element_content(seller_card, "#viewad-contact-seller-name")
-    seller_since = await get_element_content(seller_card, "#viewad-contact-seller-since")
-    if seller_since:
-        seller_since = seller_since.replace("Aktiv seit ", "").strip()
-
-    seller_type = "private"
-    pro_badge = await page.query_selector(".badge-hint-pro-small")
-    if pro_badge:
-        seller_type = "business"
-
-    return {
-        "name": seller_name.strip() if seller_name else None,
-        "since": seller_since,
-        "type": seller_type
+async def get_seller_details(page: Page) -> Dict[str, Optional[str]]:
+    result = {
+        "name": None,
+        "since": None,
+        "type": "private",
+        "badges": []
     }
 
+    try:
+        # Get seller name
+        name_selector = ".userprofile-vip"
+        result["name"] = await get_element_content(page, name_selector)
 
-async def get_details(page):
-    details = {}
+        # Get seller type
+        type_selector = ".userprofile-vip-details-text:has-text('Privater Nutzer'), .userprofile-vip-details-text:has-text('Gewerblicher Nutzer')"
+        seller_type = await get_element_content(page, type_selector)
+        if seller_type:
+            result["type"] = "business" if "Gewerblicher" in seller_type else "private"
+
+        # Get since date
+        since_selector = ".userprofile-vip-details-text:has-text('Aktiv seit')"
+        seller_since = await get_element_content(page, since_selector)
+        if seller_since:
+            result["since"] = seller_since.replace("Aktiv seit ", "").strip()
+
+        # Get user badges
+        badges_selector = ".userprofile-vip-badges .userbadge-tag"
+        badges = await get_elements_content(page, badges_selector)
+        result["badges"] = [badge.strip() for badge in badges if badge and badge.strip()]
+
+    except Exception as e:
+        print(f"Error getting seller details: {str(e)}")
+
+    return result
+
+
+async def get_details(page: Page) -> Dict[str, str]:
+    details: Dict[str, str] = {}
     try:
         # Get all detail items
-        detail_items = await page.query_selector_all("#viewad-details .addetailslist--detail")
+        detail_items: List[ElementHandle] = await page.query_selector_all("#viewad-details .addetailslist--detail")
 
         for item in detail_items:
             # Extract label (everything before the span)
-            content = await item.text_content()
+            content: str = await item.text_content()
             # Find the span element inside
-            value_span = await item.query_selector(".addetailslist--detail--value")
+            value_span: Optional[ElementHandle] = await item.query_selector(".addetailslist--detail--value")
 
             if value_span:
-                value = await value_span.text_content()
+                value: str = await value_span.text_content()
                 # The label is the content without the value
-                label = content.replace(value, "").strip()
+                label: str = content.replace(value, "").strip()
                 details[label] = value.strip()
     except Exception as e:
         print(f"Error getting details: {str(e)}")
@@ -86,12 +101,13 @@ async def get_details(page):
     return details
 
 
-async def get_features(page):
-    features = []
+async def get_features(page: Page) -> List[str]:
+    features: List[str] = []
     try:
-        feature_elements = await page.query_selector_all("#viewad-configuration .checktaglist .checktag")
+        feature_elements: List[ElementHandle] = await page.query_selector_all(
+            "#viewad-configuration .checktaglist .checktag")
         for feature in feature_elements:
-            feature_text = await feature.text_content()
+            feature_text: str = await feature.text_content()
             if feature_text and feature_text.strip():
                 features.append(feature_text.strip())
     except Exception as e:
@@ -100,8 +116,8 @@ async def get_features(page):
     return features
 
 
-async def get_location(page):
-    location = await get_element_content(page, "#viewad-locality")
+async def get_location(page: Page) -> Dict[str, str]:
+    location: Optional[str] = await get_element_content(page, "#viewad-locality")
     if not location:
         return {
             "zip": "",
@@ -109,14 +125,14 @@ async def get_location(page):
             "state": ""
         }
 
-    location_parts = location.split(" - ") if " - " in location else [location]
+    location_parts: List[str] = location.split(" - ") if " - " in location else [location]
 
-    first_part = location_parts[0].strip()
-    zip_state_parts = first_part.split(" ", 1)
-    zip_code = zip_state_parts[0].strip()
-    state = zip_state_parts[1].strip() if len(zip_state_parts) > 1 else ""
+    first_part: str = location_parts[0].strip()
+    zip_state_parts: List[str] = first_part.split(" ", 1)
+    zip_code: str = zip_state_parts[0].strip()
+    state: str = zip_state_parts[1].strip() if len(zip_state_parts) > 1 else ""
 
-    city = location_parts[1].strip() if len(location_parts) > 1 else ""
+    city: str = location_parts[1].strip() if len(location_parts) > 1 else ""
 
     return {
         "zip": zip_code,
@@ -125,18 +141,19 @@ async def get_location(page):
     }
 
 
-async def get_extra_info(page):
-    result = {
+async def get_extra_info(page: Page) -> Dict[str, Optional[str]]:
+    result: Dict[str, Optional[str]] = {
         "created_at": None,
         "views": "0"
     }
 
     try:
-        date_element = await page.query_selector("#viewad-extra-info > div:nth-child(1) > span")
+        date_element: Optional[ElementHandle] = await page.query_selector(
+            "#viewad-extra-info > div:nth-child(1) > span")
         if date_element:
             result["created_at"] = await date_element.inner_text()
 
-        views_element = await page.query_selector("#viewad-cntr-num")
+        views_element: Optional[ElementHandle] = await page.query_selector("#viewad-cntr-num")
         if views_element:
             result["views"] = await views_element.inner_text()
     except Exception as e:
