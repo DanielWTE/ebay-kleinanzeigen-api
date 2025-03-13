@@ -70,9 +70,19 @@ async def get_ads(page):
             if article:
                 data_adid = await article.get_attribute("data-adid")
                 data_href = await article.get_attribute("data-href")
+                # Get title from h2 element
+                title_element = await article.query_selector("h2.text-module-begin a.ellipsis")
+                title_text = await title_element.inner_text() if title_element else ""
+                # Get price and description
+                price = await article.query_selector("p.aditem-main--middle--price-shipping--price")
+                # strip € and VB and strip whitespace
+                price_text = await price.inner_text() if price else ""
+                price_text = price_text.replace("€", "").replace("VB", "").replace(".", "").strip()
+                description = await article.query_selector("p.aditem-main--middle--description")
+                description_text = await description.inner_text() if description else ""
                 if data_adid and data_href:
                     data_href = f"https://www.kleinanzeigen.de{data_href}"
-                    results.append({"adid": data_adid, "url": data_href})
+                    results.append({"adid": data_adid, "url": data_href, "title": title_text, "price": price_text, "description": description_text})
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
