@@ -16,6 +16,31 @@ async def get_inserate_details(url: str, page):
                                               default="[ERROR] Ad ID not found")
         categories = [cat.strip() for cat in await lib.get_elements_content(page, ".breadcrump-link") if cat.strip()]
         title = await lib.get_element_content(page, "#viewad-title", default="[ERROR] Title not found")
+        
+        # Extract status from title element
+        status = "active"  # Default status
+        title_element = await page.query_selector("#viewad-title")
+        if title_element:
+            title_text = await title_element.inner_text()
+            
+            # Check for specific status indicators in the title text
+            if "Verkauft" in title_text:
+                status = "sold"
+            elif "Reserviert •" in title_text:
+                status = "reserved"
+            elif "Gelöscht •" in title_text:
+                status = "deleted"
+            
+            # Additional check for sold class
+            title_classes = await title_element.get_attribute("class")
+            if title_classes and "is-sold" in title_classes:
+                status = "sold"
+        
+        # Final check for sold status in the page content
+        sold_badge = await page.query_selector(".badge-sold")
+        if sold_badge:
+            status = "sold"
+        
         price_element = await lib.get_element_content(page, "#viewad-price")
         price = lib.parse_price(price_element)
         views = await lib.get_element_content(page, "#viewad-cntr-num")
@@ -36,6 +61,7 @@ async def get_inserate_details(url: str, page):
             "id": ad_id,
             "categories": categories,
             "title": title.split(" • ")[-1].strip() if " • " in title else title.strip(),
+            "status": status,
             "price": price,
             "shipping": True if shipping else False,
             "location": location,
