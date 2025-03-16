@@ -21,8 +21,9 @@ async def get_inserate_details(url: str, page):
         status = "active"  # Default status
         title_element = await page.query_selector("#viewad-title")
         if title_element:
-            title_classes = await title_element.get_attribute("class")
-            if "data-soldlabel" in await title_element.evaluate("el => el.outerHTML"):
+            # Check for sold status by looking at the data-soldlabel attribute value
+            sold_label = await title_element.get_attribute("data-soldlabel")
+            if sold_label and sold_label.strip():
                 status = "sold"
             
             # Check for reserved or deleted status in the title text
