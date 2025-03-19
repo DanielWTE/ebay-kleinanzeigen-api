@@ -10,12 +10,10 @@
   <p align="center">
     <b>🚀 Looking for a ready-to-use solution?</b>
     <br />
-    Try it at <a href="https://kleinanzeigen-agent.de"><strong>kleinanzeigen-agent.de »</strong></a>
+    Try it at <a href="https://kleinanzeigen-agent.de/features/developer-api"><strong>kleinanzeigen-agent.de »</strong></a>
     <br />
     ✓ Automated Search Agents
-    <br />
-    🔜 Hosted Scraper API (Coming Soon)
-    <br />
+    ✓ Search & Detail API
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Report Bug</a>
     ·
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Request Feature</a>
@@ -27,7 +25,7 @@
 ## Getting Started
 
 ### Want to skip the setup?
-Visit [kleinanzeigen-agent.de](https://kleinanzeigen-agent.de) for our hosted solution with additional features and zero configuration required.
+Visit [kleinanzeigen-agent.de](https://kleinanzeigen-agent.de/features/developer-api) for our hosted solution with additional features and zero configuration required.
 
 ### Prerequisites
 - Python 3.12 or higher
