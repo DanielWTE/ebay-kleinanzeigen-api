@@ -13,6 +13,7 @@
     Try it at <a href="https://kleinanzeigen-agent.de/features/developer-api"><strong>kleinanzeigen-agent.de »</strong></a>
     <br />
     ✓ Automated Search Agents
+    <br />
     ✓ Search & Detail API
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Report Bug</a>
     ·
