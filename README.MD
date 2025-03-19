@@ -15,6 +15,7 @@
     ✓ Automated Search Agents
     <br />
     ✓ Search & Detail API
+    <br />
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Report Bug</a>
     ·
     <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues">Request Feature</a>
