@@ -12,7 +12,7 @@ async def get_inserate_klaz(browser_manager: PlaywrightManager,
                             min_price: int = None,
                             max_price: int = None,
                             page_count: int = 1):
-    base_url = "https://www.ebay-kleinanzeigen.de"
+    base_url = "https://www.kleinanzeigen.de"
 
     # Build the price filter part of the path
     price_path = ""
