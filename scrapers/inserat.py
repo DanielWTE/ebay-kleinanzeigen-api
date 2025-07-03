@@ -53,7 +53,15 @@ async def get_inserate_details(url: str, page):
         seller_details = await lib.get_seller_details(page)
         details = await lib.get_details(page) if await page.query_selector("#viewad-details") else {}
         features = await lib.get_features(page) if await page.query_selector("#viewad-configuration") else {}
-        shipping = await lib.get_element_content(page, ".boxedarticle--details--shipping")
+        
+        shipping_text = await lib.get_element_content(page, ".boxedarticle--details--shipping")
+        shipping = None
+        if shipping_text:
+            if "Nur Abholung" in shipping_text:
+                shipping = "pickup"
+            elif "Versand" in shipping_text:
+                shipping = "shipping"
+        
         location = await lib.get_location(page)
         extra_info = await lib.get_extra_info(page)
 
@@ -63,7 +71,7 @@ async def get_inserate_details(url: str, page):
             "title": title.split(" • ")[-1].strip() if " • " in title else title.strip(),
             "status": status,
             "price": price,
-            "shipping": True if shipping else False,
+            "delivery": shipping,
             "location": location,
             "views": views if views else "0",
             "description": description,
