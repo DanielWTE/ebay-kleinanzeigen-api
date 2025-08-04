@@ -11,6 +11,9 @@ services:
     restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1
+      - API_TOKEN=${API_TOKEN}
+    env_file:
+      - .env
     volumes:
       # Optional: Mount logs directory if you want to persist logs
       - ./logs:/app/logs
