@@ -1,3 +1,7 @@
+# Priv
+cpu_*/
+describe-commit
+
 # Python
 __pycache__/
 *.py[cod]

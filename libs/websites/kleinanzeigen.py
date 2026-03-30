@@ -2,7 +2,9 @@ from typing import Dict, List, Optional, Union, Any
 from playwright.async_api import Page, ElementHandle
 
 
-async def get_element_content(page: Page, selector: str, default: Any = None) -> Optional[str]:
+async def get_element_content(
+    page: Page, selector: str, default: Any = None
+) -> Optional[str]:
     element: Optional[ElementHandle] = await page.query_selector(selector)
     if element:
         return await element.inner_text()
@@ -35,20 +37,11 @@ def parse_price(price_text: Optional[str]) -> Dict[str, Union[str, bool]]:
 
     amount: str = price_text.replace("€", "").replace(".", "").replace(",", ".").strip()
 
-    return {
-        "amount": amount,
-        "currency": "€",
-        "negotiable": negotiable
-    }
+    return {"amount": amount, "currency": "€", "negotiable": negotiable}
 
 
 async def get_seller_details(page: Page) -> Dict[str, Optional[str]]:
-    result = {
-        "name": None,
-        "since": None,
-        "type": "private",
-        "badges": []
-    }
+    result = {"name": None, "since": None, "type": "private", "badges": []}
 
     try:
         # Get seller name
@@ -70,7 +63,9 @@ async def get_seller_details(page: Page) -> Dict[str, Optional[str]]:
         # Get user badges
         badges_selector = ".userprofile-vip-badges .userbadge-tag"
         badges = await get_elements_content(page, badges_selector)
-        result["badges"] = [badge.strip() for badge in badges if badge and badge.strip()]
+        result["badges"] = [
+            badge.strip() for badge in badges if badge and badge.strip()
+        ]
 
     except Exception as e:
         print(f"Error getting seller details: {str(e)}")
@@ -82,13 +77,17 @@ async def get_details(page: Page) -> Dict[str, str]:
     details: Dict[str, str] = {}
     try:
         # Get all detail items
-        detail_items: List[ElementHandle] = await page.query_selector_all("#viewad-details .addetailslist--detail")
+        detail_items: List[ElementHandle] = await page.query_selector_all(
+            "#viewad-details .addetailslist--detail"
+        )
 
         for item in detail_items:
             # Extract label (everything before the span)
             content: str = await item.text_content()
             # Find the span element inside
-            value_span: Optional[ElementHandle] = await item.query_selector(".addetailslist--detail--value")
+            value_span: Optional[ElementHandle] = await item.query_selector(
+                ".addetailslist--detail--value"
+            )
 
             if value_span:
                 value: str = await value_span.text_content()
@@ -105,7 +104,8 @@ async def get_features(page: Page) -> List[str]:
     features: List[str] = []
     try:
         feature_elements: List[ElementHandle] = await page.query_selector_all(
-            "#viewad-configuration .checktaglist .checktag")
+            "#viewad-configuration .checktaglist .checktag"
+        )
         for feature in feature_elements:
             feature_text: str = await feature.text_content()
             if feature_text and feature_text.strip():
@@ -119,13 +119,11 @@ async def get_features(page: Page) -> List[str]:
 async def get_location(page: Page) -> Dict[str, str]:
     location: Optional[str] = await get_element_content(page, "#viewad-locality")
     if not location:
-        return {
-            "zip": "",
-            "city": "",
-            "state": ""
-        }
+        return {"zip": "", "city": "", "state": ""}
 
-    location_parts: List[str] = location.split(" - ") if " - " in location else [location]
+    location_parts: List[str] = (
+        location.split(" - ") if " - " in location else [location]
+    )
 
     first_part: str = location_parts[0].strip()
     zip_state_parts: List[str] = first_part.split(" ", 1)
@@ -134,26 +132,22 @@ async def get_location(page: Page) -> Dict[str, str]:
 
     city: str = location_parts[1].strip() if len(location_parts) > 1 else ""
 
-    return {
-        "zip": zip_code,
-        "city": city,
-        "state": state
-    }
+    return {"zip": zip_code, "city": city, "state": state}
 
 
 async def get_extra_info(page: Page) -> Dict[str, Optional[str]]:
-    result: Dict[str, Optional[str]] = {
-        "created_at": None,
-        "views": "0"
-    }
+    result: Dict[str, Optional[str]] = {"created_at": None, "views": "0"}
 
     try:
         date_element: Optional[ElementHandle] = await page.query_selector(
-            "#viewad-extra-info > div:nth-child(1) > span")
+            "#viewad-extra-info > div:nth-child(1) > span"
+        )
         if date_element:
             result["created_at"] = await date_element.inner_text()
 
-        views_element: Optional[ElementHandle] = await page.query_selector("#viewad-cntr-num")
+        views_element: Optional[ElementHandle] = await page.query_selector(
+            "#viewad-cntr-num"
+        )
         if views_element:
             result["views"] = await views_element.inner_text()
     except Exception as e:

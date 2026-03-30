@@ -1,0 +1,17 @@
+[project]
+name = "ebay-kleinanzeigen-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.12.15",
+    "fastapi>=0.115.6",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "playwright>=1.49.0",
+    "pytest>=8.4.1",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34.0",
+    "uvloop>=0.21.0",
+]
