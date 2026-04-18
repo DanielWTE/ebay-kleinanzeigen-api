@@ -242,10 +242,11 @@ async def fetch_listing_details_concurrent(
                                             )
                                         },
                                     )(),
-                                    "should_retry": lambda max_retries: attempt
-                                    < max_retries
-                                    and error_category
-                                    in ["recoverable", "network", "resource"],
+                                    "should_retry": lambda max_retries: (
+                                        attempt < max_retries
+                                        and error_category
+                                        in ["recoverable", "network", "resource"]
+                                    ),
                                 },
                             )()
                         else:

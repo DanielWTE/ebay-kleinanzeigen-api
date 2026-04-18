@@ -47,10 +47,9 @@ async def get_image_sources(page: Page, selector: str = "#viewad-image") -> List
     if not images:
         primary = await page.query_selector(selector)
         if primary:
-            src = (
-                await primary.get_attribute("data-imgsrc")
-                or await primary.get_attribute("src")
-            )
+            src = await primary.get_attribute(
+                "data-imgsrc"
+            ) or await primary.get_attribute("src")
             if src:
                 images.append(src)
 
