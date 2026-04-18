@@ -16,13 +16,44 @@ async def get_elements_content(page: Page, selector: str) -> List[str]:
     return [await element.text_content() for element in elements]
 
 
-async def get_image_sources(page: Page, selector: str) -> List[str]:
+async def get_image_sources(page: Page, selector: str = "#viewad-image") -> List[str]:
+    """
+    Extract all gallery image URLs from a Kleinanzeigen listing page.
+
+    Kleinanzeigen renders the gallery as N siblings of
+    `.galleryimage-element[data-ix]`, each containing an <img> with the
+    full-size URL in `data-imgsrc` (and usually mirrored in `src`). The
+    previous implementation relied on `page.query_selector("#viewad-image")`
+    and therefore only returned the first <img>, because every gallery
+    <img> reuses that same id (invalid HTML, but that is what the site
+    ships). Filtering on `[data-ix]` naturally excludes the in-gallery
+    ad slot which reuses the `galleryimage-element` class without one.
+
+    `selector` is kept for backwards compatibility and is used only as a
+    fallback if the gallery DOM structure ever changes.
+    """
     images: List[str] = []
-    image_element: Optional[ElementHandle] = await page.query_selector(selector)
-    if image_element:
-        src: Optional[str] = await image_element.get_attribute("src")
-        if src:
+    seen: set[str] = set()
+
+    for item in await page.query_selector_all(".galleryimage-element[data-ix]"):
+        img = await item.query_selector("img")
+        if not img:
+            continue
+        src = await img.get_attribute("data-imgsrc") or await img.get_attribute("src")
+        if src and src not in seen:
+            seen.add(src)
             images.append(src)
+
+    if not images:
+        primary = await page.query_selector(selector)
+        if primary:
+            src = (
+                await primary.get_attribute("data-imgsrc")
+                or await primary.get_attribute("src")
+            )
+            if src:
+                images.append(src)
+
     return images
 
 
