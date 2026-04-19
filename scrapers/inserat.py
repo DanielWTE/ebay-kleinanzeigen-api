@@ -12,7 +12,7 @@ from utils.error_handling import (
 )
 
 
-async def get_inserate_details(url: str, page):
+async def get_inserate_details(url: str, page, full_gallery: bool = False):
     try:
         await page.goto(url, timeout=120000)
 
@@ -69,7 +69,9 @@ async def get_inserate_details(url: str, page):
             description = re.sub(r"[ \t]+", " ", description).strip()
             description = re.sub(r"\n+", "\n", description)
 
-        images = await lib.get_image_sources(page, "#viewad-image")
+        images = await lib.get_image_sources(
+            page, "#viewad-image", full_gallery=full_gallery
+        )
         seller_details = await lib.get_seller_details(page)
         details = (
             await lib.get_details(page)
@@ -119,7 +121,10 @@ async def get_inserate_details(url: str, page):
 
 
 async def get_inserate_details_optimized(
-    browser_manager: OptimizedPlaywrightManager, listing_id: str, retry_count: int = 2
+    browser_manager: OptimizedPlaywrightManager,
+    listing_id: str,
+    retry_count: int = 2,
+    full_gallery: bool = False,
 ) -> dict:
     """
     Optimized version of get_inserate_details with comprehensive error handling and performance tracking.
@@ -159,7 +164,9 @@ async def get_inserate_details_optimized(
                         page = await context.new_page()
 
                         # Get listing details using existing function
-                        details = await get_inserate_details(url, page)
+                        details = await get_inserate_details(
+                            url, page, full_gallery=full_gallery
+                        )
 
                         # Validate the extracted details
                         if not details or not details.get("id"):

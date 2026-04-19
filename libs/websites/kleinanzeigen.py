@@ -16,22 +16,34 @@ async def get_elements_content(page: Page, selector: str) -> List[str]:
     return [await element.text_content() for element in elements]
 
 
-async def get_image_sources(page: Page, selector: str = "#viewad-image") -> List[str]:
+async def get_image_sources(
+    page: Page,
+    selector: str = "#viewad-image",
+    full_gallery: bool = False,
+) -> List[str]:
     """
-    Extract all gallery image URLs from a Kleinanzeigen listing page.
+    Extract image URLs from a Kleinanzeigen listing page.
 
-    Kleinanzeigen renders the gallery as N siblings of
-    `.galleryimage-element[data-ix]`, each containing an <img> with the
-    full-size URL in `data-imgsrc` (and usually mirrored in `src`). The
-    previous implementation relied on `page.query_selector("#viewad-image")`
-    and therefore only returned the first <img>, because every gallery
-    <img> reuses that same id (invalid HTML, but that is what the site
-    ships). Filtering on `[data-ix]` naturally excludes the in-gallery
-    ad slot which reuses the `galleryimage-element` class without one.
+    Default (`full_gallery=False`) returns only the hero image — preserves
+    the historical behaviour for callers doing lightweight enrichment.
 
-    `selector` is kept for backwards compatibility and is used only as a
-    fallback if the gallery DOM structure ever changes.
+    Opt-in (`full_gallery=True`) walks every `.galleryimage-element[data-ix]`
+    sibling and returns all gallery images. Kleinanzeigen reuses
+    `id="viewad-image"` on every <img> in the gallery (invalid HTML but
+    that's what the site ships), so the `#viewad-image` query_selector
+    route only ever sees the first one. Filtering on `[data-ix]` also
+    excludes the in-gallery ad slot which reuses the `galleryimage-element`
+    class without one.
     """
+    if not full_gallery:
+        primary = await page.query_selector(selector)
+        if not primary:
+            return []
+        src = await primary.get_attribute("data-imgsrc") or await primary.get_attribute(
+            "src"
+        )
+        return [src] if src else []
+
     images: List[str] = []
     seen: set[str] = set()
 

@@ -1,11 +1,21 @@
 from scrapers.inserat import get_inserate_details_optimized
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 
 router = APIRouter()
 
 
 @router.get("/inserat/{id}")
-async def get_inserat(request: Request, id: str):
+async def get_inserat(
+    request: Request,
+    id: str,
+    full_gallery: bool = Query(
+        False,
+        description=(
+            "When true, return every image in the listing gallery. "
+            "When false (default), return only the hero image."
+        ),
+    ),
+):
     """
     Fetch detailed information for a specific listing.
 
@@ -20,7 +30,9 @@ async def get_inserat(request: Request, id: str):
         raise HTTPException(status_code=503, detail="Service unavailable")
 
     try:
-        response = await get_inserate_details_optimized(browser_manager, id)
+        response = await get_inserate_details_optimized(
+            browser_manager, id, full_gallery=full_gallery
+        )
 
         if not response.get("success", False):
             raise HTTPException(
