@@ -289,7 +289,9 @@ class UltraOptimizedScraper:
         tracker = PerformanceTracker()
         tracker.start_request()
 
-        with error_handling_context(operation="ultra_multi_page_scrape", logger=logger) as ctx:
+        with error_handling_context(
+            operation="ultra_multi_page_scrape", logger=logger
+        ) as ctx:
             # Build URLs efficiently
             base_url = "https://www.kleinanzeigen.de"
 
@@ -311,7 +313,11 @@ class UltraOptimizedScraper:
                 params["radius"] = radius
 
             param_string = f"?{urlencode(params)}" if params else ""
-            search_url = base_url + search_path.format(price_path=price_path, page='{page}') + param_string
+            search_url = (
+                base_url
+                + search_path.format(price_path=price_path, page="{page}")
+                + param_string
+            )
 
             # Create page fetch tasks
             async def create_page_task(page_num: int):

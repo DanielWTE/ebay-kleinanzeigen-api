@@ -16,13 +16,55 @@ async def get_elements_content(page: Page, selector: str) -> List[str]:
     return [await element.text_content() for element in elements]
 
 
-async def get_image_sources(page: Page, selector: str) -> List[str]:
+async def get_image_sources(
+    page: Page,
+    selector: str = "#viewad-image",
+    full_gallery: bool = False,
+) -> List[str]:
+    """
+    Extract image URLs from a Kleinanzeigen listing page.
+
+    Default (`full_gallery=False`) returns only the hero image — preserves
+    the historical behaviour for callers doing lightweight enrichment.
+
+    Opt-in (`full_gallery=True`) walks every `.galleryimage-element[data-ix]`
+    sibling and returns all gallery images. Kleinanzeigen reuses
+    `id="viewad-image"` on every <img> in the gallery (invalid HTML but
+    that's what the site ships), so the `#viewad-image` query_selector
+    route only ever sees the first one. Filtering on `[data-ix]` also
+    excludes the in-gallery ad slot which reuses the `galleryimage-element`
+    class without one.
+    """
+    if not full_gallery:
+        primary = await page.query_selector(selector)
+        if not primary:
+            return []
+        src = await primary.get_attribute("data-imgsrc") or await primary.get_attribute(
+            "src"
+        )
+        return [src] if src else []
+
     images: List[str] = []
-    image_element: Optional[ElementHandle] = await page.query_selector(selector)
-    if image_element:
-        src: Optional[str] = await image_element.get_attribute("src")
-        if src:
+    seen: set[str] = set()
+
+    for item in await page.query_selector_all(".galleryimage-element[data-ix]"):
+        img = await item.query_selector("img")
+        if not img:
+            continue
+        src = await img.get_attribute("data-imgsrc") or await img.get_attribute("src")
+        if src and src not in seen:
+            seen.add(src)
             images.append(src)
+
+    if not images:
+        primary = await page.query_selector(selector)
+        if primary:
+            src = await primary.get_attribute(
+                "data-imgsrc"
+            ) or await primary.get_attribute("src")
+            if src:
+                images.append(src)
+
     return images
 
 

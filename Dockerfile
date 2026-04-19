@@ -1,15 +1,12 @@
-FROM python:3.12-slim
+# Use Playwright's official Python image — ships with matching
+# Chromium + all system deps pre-installed, avoiding the
+# `playwright install-deps` package-name drift against Ubuntu archives.
+FROM mcr.microsoft.com/playwright/python:v1.54.0-jammy
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN playwright install chromium
-RUN playwright install-deps
 
 COPY . .
 
