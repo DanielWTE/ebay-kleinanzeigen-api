@@ -39,7 +39,7 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install -r requirements.txt
-          uv pip install ruff
+          uv pip install ruff==0.15.14
       
       - name: Run Ruff linting and formatting check
         run: |
