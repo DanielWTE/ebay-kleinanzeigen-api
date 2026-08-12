@@ -82,6 +82,24 @@ def _parse_kleinanzeigen_date(text: str) -> Optional[str]:
         return None
 
 
+
+def _clean_location_text(text: str) -> str:
+    """Clean location text from Kleinanzeigen result cards."""
+    if not text:
+        return ""
+
+    value = str(text).replace("\xa0", " ")
+    lines = [line.strip() for line in value.splitlines() if line.strip()]
+    value = " ".join(lines)
+    value = " ".join(value.split())
+
+    for bad in ["Ort", "Standort"]:
+        if value.lower().startswith(bad.lower()):
+            value = value[len(bad):].strip(" :-|•")
+
+    return value.strip()
+
+
 class UltraOptimizedScraper:
     """
     Ultra-optimized scraper implementing all advanced asyncio patterns.
@@ -154,14 +172,12 @@ class UltraOptimizedScraper:
     async def _extract_single_ad(self, article) -> Dict[str, Any]:
         """Extract data from a single ad article element."""
         try:
-            # Get basic attributes first (fastest operations)
             data_adid = await article.get_attribute("data-adid")
             data_href = await article.get_attribute("data-href")
 
             if not data_adid or not data_href:
                 return None
 
-            # Parallel extraction of text content
             title_task = self._get_text_content(
                 article, "h2.text-module-begin a.ellipsis"
             )
@@ -173,11 +189,55 @@ class UltraOptimizedScraper:
             )
             date_task = self._get_text_content(article, ".aditem-main--top--right")
 
-            title_text, price_text, description_text, date_raw = await asyncio.gather(
-                title_task, price_task, desc_task, date_task, return_exceptions=True
+            location_task = article.evaluate(
+                """
+                (el) => {
+                    const selectors = [
+                        ".aditem-main--top--left",
+                        ".aditem-main--top--left--location",
+                        "[class*='aditem-main--top--left']",
+                        "[class*='location']",
+                        "[class*='Location']"
+                    ];
+
+                    for (const selector of selectors) {
+                        const node = el.querySelector(selector);
+                        if (node && node.innerText && node.innerText.trim()) {
+                            return node.innerText.trim();
+                        }
+                    }
+
+                    const text = el.innerText || "";
+                    const lines = text
+                        .split("\\n")
+                        .map(line => line.trim())
+                        .filter(Boolean);
+
+                    const zipLine = lines.find(line => /\\b\\d{5}\\b/.test(line));
+                    if (zipLine) {
+                        return zipLine;
+                    }
+
+                    return "";
+                }
+                """
             )
 
-            # Process price text efficiently
+            (
+                title_text,
+                price_text,
+                description_text,
+                date_raw,
+                location_raw,
+            ) = await asyncio.gather(
+                title_task,
+                price_task,
+                desc_task,
+                date_task,
+                location_task,
+                return_exceptions=True,
+            )
+
             if isinstance(price_text, str):
                 price_text = (
                     price_text.replace("€", "")
@@ -192,14 +252,17 @@ class UltraOptimizedScraper:
                 date_raw if isinstance(date_raw, str) else ""
             )
 
+            location_text = _clean_location_text(
+                location_raw if isinstance(location_raw, str) else ""
+            )
+
             return {
                 "adid": data_adid,
                 "url": f"https://www.kleinanzeigen.de{data_href}",
                 "title": title_text if isinstance(title_text, str) else "",
                 "price": price_text,
-                "description": description_text
-                if isinstance(description_text, str)
-                else "",
+                "location": location_text,
+                "description": description_text if isinstance(description_text, str) else "",
                 "published_at": published_at,
             }
 
