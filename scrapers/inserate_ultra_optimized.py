@@ -82,7 +82,6 @@ def _parse_kleinanzeigen_date(text: str) -> Optional[str]:
         return None
 
 
-
 def _clean_location_text(text: str) -> str:
     """Clean location text from Kleinanzeigen result cards."""
     if not text:
@@ -95,7 +94,7 @@ def _clean_location_text(text: str) -> str:
 
     for bad in ["Ort", "Standort"]:
         if value.lower().startswith(bad.lower()):
-            value = value[len(bad):].strip(" :-|•")
+            value = value[len(bad) :].strip(" :-|•")
 
     return value.strip()
 
@@ -262,7 +261,9 @@ class UltraOptimizedScraper:
                 "title": title_text if isinstance(title_text, str) else "",
                 "price": price_text,
                 "location": location_text,
-                "description": description_text if isinstance(description_text, str) else "",
+                "description": description_text
+                if isinstance(description_text, str)
+                else "",
                 "published_at": published_at,
             }
 
