@@ -134,8 +134,10 @@ class UltraOptimizedScraper:
         """
         try:
             # Use more specific selector to reduce DOM traversal
+            # NOTE: Astro relaunch dropped the .ad-listitem wrapper — match
+            # listing articles directly (still skips top-ads via class check).
             items = await page.query_selector_all(
-                ".ad-listitem:not(.is-topad):not(.badge-hint-pro-small-srp) article[data-adid]"
+                "article[data-adid]"
             )
 
             results = []
@@ -181,7 +183,8 @@ class UltraOptimizedScraper:
                 article, "h2.text-module-begin a.ellipsis"
             )
             price_task = self._get_text_content(
-                article, "p.aditem-main--middle--price-shipping--price"
+                article,
+                "p.aditem-main--middle--price-shipping--price, [class*='price']",
             )
             desc_task = self._get_text_content(
                 article, "p.aditem-main--middle--description"
@@ -236,6 +239,27 @@ class UltraOptimizedScraper:
                 location_task,
                 return_exceptions=True,
             )
+
+            # Astro layout: h2 is gone — fall back to the article's embedded
+            # JSON-LD (<script type="application/ld+json">, fields
+            # title/description/creditText) when the classic selector misses.
+            if not (isinstance(title_text, str) and title_text.strip()):
+                try:
+                    ld_raw = await article.evaluate(
+                        """(el) => {
+                            const s = el.querySelector(
+                                'script[type="application/ld+json"]'
+                            );
+                            if (!s) return null;
+                            try { const j = JSON.parse(s.textContent);
+                                  return j.title || j.name || null; }
+                            catch (e) { return null; }
+                        }"""
+                    )
+                    if isinstance(ld_raw, str) and ld_raw.strip():
+                        title_text = ld_raw.strip()
+                except Exception:
+                    pass
 
             if isinstance(price_text, str):
                 price_text = (
