@@ -1,7 +1,13 @@
 import asyncio
+import os
 from typing import List
 from playwright.async_api import async_playwright, BrowserContext, Page
 from utils.user_agent import get_random_ua
+
+# External CDP endpoint (e.g. BrowserUse cloud session, browserless, plain
+# chromium --remote-debugging-port). When set, the app connects to that
+# browser instead of launching a local bundled Chromium.
+CDP_URL = os.environ.get("BROWSER_CDP_URL", "").strip() or None
 
 
 class PlaywrightManager:
@@ -11,7 +17,10 @@ class PlaywrightManager:
 
     async def start(self):
         self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(headless=True)
+        if CDP_URL:
+            self._browser = await self._playwright.chromium.connect_over_cdp(CDP_URL)
+        else:
+            self._browser = await self._playwright.chromium.launch(headless=True)
 
     async def new_context_page(self):
         context = await self._browser.new_context(user_agent=get_random_ua())
@@ -46,14 +55,18 @@ class OptimizedPlaywrightManager:
     async def start(self):
         """Initialize the browser and create initial context pool"""
         self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(headless=True)
+        if CDP_URL:
+            self._browser = await self._playwright.chromium.connect_over_cdp(CDP_URL)
+        else:
+            self._browser = await self._playwright.chromium.launch(headless=True)
 
         # Pre-create some contexts for the pool
         initial_contexts = min(3, self._max_contexts)
-        for _ in range(initial_contexts):
-            context = await self._browser.new_context(user_agent=get_random_ua())
-            self._context_pool.append(context)
-            self._contexts_created += 1
+        if not CDP_URL:  # skip pre-warm against external/ephemeral browsers
+            for _ in range(initial_contexts):
+                context = await self._browser.new_context(user_agent=get_random_ua())
+                self._context_pool.append(context)
+                self._contexts_created += 1
 
     async def get_context(self) -> BrowserContext:
         """Get a browser context from the pool or create a new one"""
