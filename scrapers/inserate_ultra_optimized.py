@@ -136,9 +136,7 @@ class UltraOptimizedScraper:
             # Use more specific selector to reduce DOM traversal
             # NOTE: Astro relaunch dropped the .ad-listitem wrapper — match
             # listing articles directly (still skips top-ads via class check).
-            items = await page.query_selector_all(
-                "article[data-adid]"
-            )
+            items = await page.query_selector_all("article[data-adid]")
 
             results = []
 
