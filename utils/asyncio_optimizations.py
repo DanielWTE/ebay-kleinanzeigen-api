@@ -160,11 +160,11 @@ class EventLoopOptimizer:
 
     @staticmethod
     def setup_uvloop():
-        """Setup uvloop for 2-4x performance improvement."""
+        """Install uvloop for 2-4x performance improvement."""
         try:
             import uvloop
 
-            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+            uvloop.install()
             return True
         except ImportError:
             print("uvloop not available, using default event loop")
