@@ -464,7 +464,7 @@ class UltraOptimizedScraper:
             if min_price is not None or max_price is not None:
                 min_str = str(min_price) if min_price is not None else ""
                 max_str = str(max_price) if max_price is not None else ""
-                price_path = f"/preis:{min_str}:{max_str}"
+                price_path = f"/s-preis:{min_str}:{max_str}"
 
             search_path = f"{price_path}/s-seite:{{page}}"
 
