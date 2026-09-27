@@ -2,6 +2,10 @@
 Simple test to check individual endpoints
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 import asyncio
 import aiohttp
 

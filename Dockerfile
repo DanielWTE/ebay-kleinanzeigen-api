@@ -1,13 +1,27 @@
-FROM python:3.14-slim-bookworm
-
+FROM python:3.14-slim-bookworm AS build
 WORKDIR /app
 
-# Install Python dependencies before copying source (layer cache)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv (pinned) for reproducible install from uv.lock
+COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /usr/local/bin/uv
 
-# Install Chromium + system deps for Playwright
-RUN playwright install --with-deps chromium
+# Install Python dependencies before copying source (layer cache)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project --no-editable
+
+# Make the venv the default Python environment for subsequent layers
+ENV PATH="/app/.venv/bin:$PATH"
+
+
+FROM python:3.14-slim-bookworm
+WORKDIR /app
+
+# Copy only the resolved venv (no uv, no build tooling)
+COPY --from=build /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Install Playwright headless-only Chromium + system deps (single layer, apt cache cleaned)
+RUN playwright install --with-deps chromium --only-shell \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 

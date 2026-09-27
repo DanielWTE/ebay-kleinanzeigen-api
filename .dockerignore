@@ -8,4 +8,4 @@ __pycache__
 tests/
 *.md
 .claude/
-uv.lock
+.venv/
