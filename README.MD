@@ -60,6 +60,8 @@ uvicorn main:app --reload
 
 The API will be available at `http://localhost:8000`
 
+> **Windows:** start without `--reload` (`uvicorn main:app`). With `--reload` (or `--workers`), uvicorn runs a `SelectorEventLoop` on Windows, which cannot start the Playwright browser process and fails with `NotImplementedError`. This applies to all `--reload` commands below. Alternatively, use Docker.
+
 #### Non-headless mode (visible browser)
 
 Set the `HEADLESS` environment variable to `false` to watch the browser while scraping — useful during development:
