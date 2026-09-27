@@ -32,7 +32,7 @@ Visit [kleinanzeigen-agent.de](https://kleinanzeigen-agent.de/features/developer
 
 ### Prerequisites
 
-- Python 3.12 or higher
+- Python 3.14 or higher
 - pip (Python package manager)
 - Playwright
 
