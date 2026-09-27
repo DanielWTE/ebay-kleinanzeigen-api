@@ -180,14 +180,39 @@ class UltraOptimizedScraper:
             title_task = self._get_text_content(
                 article, "h2.text-module-begin a.ellipsis"
             )
+            # Astro layout: no BEM classes anymore — price is the bold <p>
+            # after the <h3> title (strike-through old price is not bold),
+            # description is the <p> directly after the <h3>.
             price_task = self._get_text_content(
                 article,
-                "p.aditem-main--middle--price-shipping--price, [class*='price']",
+                "p.aditem-main--middle--price-shipping--price, [class*='price'], "
+                "h3 ~ div > p.font-strong",
             )
             desc_task = self._get_text_content(
-                article, "p.aditem-main--middle--description"
+                article, "p.aditem-main--middle--description, h3 + p"
             )
-            date_task = self._get_text_content(article, ".aditem-main--top--right")
+            # Astro layout: date is a plain <span> ("Heute, 20:06",
+            # "Gestern, 19:30" or "25.09.2026") next to a calendar icon.
+            date_task = article.evaluate(
+                """
+                (el) => {
+                    const legacy = el.querySelector(".aditem-main--top--right");
+                    if (legacy && legacy.innerText && legacy.innerText.trim()) {
+                        return legacy.innerText.trim();
+                    }
+
+                    const dateRe = /^((Heute|Gestern),\\s*\\d{1,2}:\\d{2}|\\d{2}\\.\\d{2}\\.\\d{4})$/;
+                    for (const span of el.querySelectorAll("span")) {
+                        const text = (span.textContent || "").trim();
+                        if (dateRe.test(text)) {
+                            return text;
+                        }
+                    }
+
+                    return "";
+                }
+                """
+            )
 
             location_task = article.evaluate(
                 """
