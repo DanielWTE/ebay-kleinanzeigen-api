@@ -55,44 +55,12 @@ uv run playwright install chromium
 3. Start the API
 
 ```sh
-uvicorn main:app --reload
+uv run uvicorn main:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
 
-> **Windows:** start without `--reload` (`uvicorn main:app`). With `--reload` (or `--workers`), uvicorn runs a `SelectorEventLoop` on Windows, which cannot start the Playwright browser process and fails with `NotImplementedError`. This applies to all `--reload` commands below. Alternatively, use Docker.
-
-#### Non-headless mode (visible browser)
-
-Set the `HEADLESS` environment variable to `false` to watch the browser while scraping — useful during development:
-
-```sh
-HEADLESS=false uvicorn main:app --reload
-```
-
-### Installation using UV
-
-#### Prerequisites
-
-- uv package manager
-
-#### Installation of dependencies
-
-```sh
-uv sync
-```
-
-#### Start the API
-
-```sh
-uv run uvicorn main:app --reload
-```
-
-#### Non-headless mode with UV
-
-```sh
-HEADLESS=false uv run uvicorn main:app --reload
-```
+> **Windows:** start without `--reload` (`uv run uvicorn main:app`). With `--reload` (or `--workers`), uvicorn runs a `SelectorEventLoop` on Windows, which cannot start the Playwright browser process and fails with `NotImplementedError`. Alternatively, use Docker.
 
 ### Installation using Docker
 
