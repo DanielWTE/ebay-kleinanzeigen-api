@@ -8,6 +8,10 @@ This test validates:
 - Basic functionality works
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 import asyncio
 import aiohttp
 import time

@@ -10,6 +10,10 @@ This test suite validates:
 Requirements tested: 1.1, 3.1, 3.2, 4.1, 4.2, 4.3
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 import asyncio
 import time
 import statistics

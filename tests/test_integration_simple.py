@@ -4,6 +4,10 @@ Simplified integration tests for API performance optimization validation.
 This test suite validates the core functionality without strict performance limits.
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 import asyncio
 import time
 import aiohttp

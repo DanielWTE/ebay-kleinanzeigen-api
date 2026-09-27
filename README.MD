@@ -33,7 +33,7 @@ Visit [kleinanzeigen-agent.de](https://kleinanzeigen-agent.de/features/developer
 ### Prerequisites
 
 - Python 3.14 or higher
-- pip (Python package manager)
+- uv (Python package manager)
 - Playwright
 
 ### Installation
@@ -48,8 +48,8 @@ cd ebay-kleinanzeigen-api
 2. Install dependencies
 
 ```sh
-pip install -r requirements.txt
-playwright install chromium
+uv sync
+uv run playwright install chromium
 ```
 
 3. Start the API

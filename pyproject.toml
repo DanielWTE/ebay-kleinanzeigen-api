@@ -10,8 +10,20 @@ dependencies = [
     "httpx>=0.28.1",
     "loguru>=0.7.3",
     "playwright>=1.49.0",
-    "pytest>=8.4.1",
     "python-multipart>=0.0.20",
     "uvicorn>=0.34.0",
     "uvloop>=0.21.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ['.']
+import_mode = 'importlib'
+asyncio_mode = 'auto'
+addopts = '-m "not integration"'
+markers = ['integration: requires a running API server on localhost:8000; run with -m integration']
