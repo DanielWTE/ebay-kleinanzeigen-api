@@ -9,6 +9,7 @@ import asyncio
 import time
 import random
 import gc
+import json
 from datetime import datetime, date, timedelta
 from urllib.parse import urlencode
 from typing import List, Dict, Any, Optional, Tuple
@@ -36,6 +37,10 @@ from utils.asyncio_optimizations import (
 def _page_has_old_listings(results: list, min_publish_date: datetime) -> bool:
     """Return True if any listing on this page was published before min_publish_date."""
     for r in results:
+        # Top ads are pinned above the date-sorted list, so an old one says
+        # nothing about the listings on later pages.
+        if r.get("is_top_ad"):
+            continue
         pub = r.get("published_at")
         if pub and datetime.fromisoformat(pub) < min_publish_date:
             return True
@@ -80,6 +85,48 @@ def _parse_kleinanzeigen_date(text: str) -> Optional[str]:
         return datetime(int(y), int(mo), int(d)).isoformat()
     except Exception:
         return None
+
+
+def _decode_astro_value(value: Any) -> Any:
+    """Decode Astro's island prop serialization, where every value is a
+    [type, value] pair (0 = plain value or object, 1 = array)."""
+    if isinstance(value, list) and len(value) == 2 and isinstance(value[0], int):
+        kind, inner = value
+        if kind == 0 and isinstance(inner, dict):
+            return {k: _decode_astro_value(v) for k, v in inner.items()}
+        if kind == 1 and isinstance(inner, list):
+            return [_decode_astro_value(v) for v in inner]
+        return inner
+    return value
+
+
+def _parse_ad_previews(raw_props: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Map adid -> ad preview data from the search page's Astro island props.
+
+    The preview data carries 'sortingDate' and 'topAd' for every listing,
+    including top ads whose cards show no date (issue #36).
+    """
+    previews: Dict[str, Dict[str, Any]] = {}
+
+    def collect(node: Any) -> None:
+        if isinstance(node, dict):
+            if "id" in node and "sortingDate" in node:
+                previews[str(node["id"])] = node
+            for v in node.values():
+                collect(v)
+        elif isinstance(node, list):
+            for v in node:
+                collect(v)
+
+    for raw in raw_props:
+        try:
+            props = json.loads(raw)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(props, dict):
+            collect({k: _decode_astro_value(v) for k, v in props.items()})
+
+    return previews
 
 
 def _clean_location_text(text: str) -> str:
@@ -135,8 +182,9 @@ class UltraOptimizedScraper:
         try:
             # Use more specific selector to reduce DOM traversal
             # NOTE: Astro relaunch dropped the .ad-listitem wrapper — match
-            # listing articles directly (still skips top-ads via class check).
+            # listing articles directly (top ads included, flagged via is_top_ad).
             items = await page.query_selector_all("article[data-adid]")
+            previews = await self._get_ad_previews(page)
 
             results = []
 
@@ -148,7 +196,7 @@ class UltraOptimizedScraper:
                 # Process batch concurrently
                 batch_tasks = []
                 for item in batch:
-                    batch_tasks.append(self._extract_single_ad(item))
+                    batch_tasks.append(self._extract_single_ad(item, previews))
 
                 batch_results = await asyncio.gather(
                     *batch_tasks, return_exceptions=True
@@ -168,7 +216,22 @@ class UltraOptimizedScraper:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def _extract_single_ad(self, article) -> Dict[str, Any]:
+    async def _get_ad_previews(self, page) -> Dict[str, Dict[str, Any]]:
+        """Read the per-ad preview data embedded in the page's Astro islands."""
+        try:
+            raw_props = await page.evaluate(
+                """() => Array.from(
+                    document.querySelectorAll("astro-island[props*='sortingDate']"),
+                    (el) => el.getAttribute("props")
+                )"""
+            )
+        except Exception:
+            return {}
+        return _parse_ad_previews(raw_props or [])
+
+    async def _extract_single_ad(
+        self, article, previews: Optional[Dict[str, Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
         """Extract data from a single ad article element."""
         try:
             data_adid = await article.get_attribute("data-adid")
@@ -176,6 +239,8 @@ class UltraOptimizedScraper:
 
             if not data_adid or not data_href:
                 return None
+
+            preview = (previews or {}).get(data_adid, {})
 
             title_task = self._get_text_content(
                 article, "h2.text-module-begin a.ellipsis"
@@ -297,6 +362,12 @@ class UltraOptimizedScraper:
             published_at = _parse_kleinanzeigen_date(
                 date_raw if isinstance(date_raw, str) else ""
             )
+            if published_at is None:
+                # Top ad cards show no date; the embedded preview data does.
+                sorting_date = preview.get("sortingDate")
+                published_at = _parse_kleinanzeigen_date(
+                    sorting_date if isinstance(sorting_date, str) else ""
+                )
 
             location_text = _clean_location_text(
                 location_raw if isinstance(location_raw, str) else ""
@@ -312,6 +383,7 @@ class UltraOptimizedScraper:
                 if isinstance(description_text, str)
                 else "",
                 "published_at": published_at,
+                "is_top_ad": preview.get("topAd") is True,
             }
 
         except Exception:
