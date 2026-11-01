@@ -10,6 +10,7 @@ import time
 import random
 import gc
 import json
+import re
 from datetime import datetime, date, timedelta
 from urllib.parse import urlencode
 from typing import List, Dict, Any, Optional, Tuple
@@ -144,6 +145,22 @@ def _clean_location_text(text: str) -> str:
             value = value[len(bad) :].strip(" :-|•")
 
     return value.strip()
+
+
+_DISTANCE_RE = re.compile(r"\s*\((\d+(?:[.,]\d+)?)\s*km\)\s*$")
+
+
+def _split_location_distance(text: str) -> Tuple[str, Optional[float]]:
+    """Split a trailing '(N km)' distance off a cleaned location string.
+
+    Accepts integer and decimal distances ('(12 km)', '(12,5 km)').
+    Returns (location, distance_km); distance_km is None when absent.
+    """
+    match = _DISTANCE_RE.search(text)
+    if not match:
+        return text, None
+    distance = float(match.group(1).replace(",", "."))
+    return text[: match.start()].strip(), distance
 
 
 class UltraOptimizedScraper:
@@ -303,9 +320,13 @@ class UltraOptimizedScraper:
                         .map(line => line.trim())
                         .filter(Boolean);
 
-                    const zipLine = lines.find(line => /\\b\\d{5}\\b/.test(line));
-                    if (zipLine) {
-                        return zipLine;
+                    const zipIdx = lines.findIndex(line => /\\b\\d{5}\\b/.test(line));
+                    if (zipIdx !== -1) {
+                        let loc = lines[zipIdx];
+                        if (zipIdx + 1 < lines.length && /^\\(\\d+(?:[.,]\\d+)?\\s*km\\)$/.test(lines[zipIdx + 1])) {
+                            loc += " " + lines[zipIdx + 1];
+                        }
+                        return loc;
                     }
 
                     return "";
@@ -369,8 +390,10 @@ class UltraOptimizedScraper:
                     sorting_date if isinstance(sorting_date, str) else ""
                 )
 
-            location_text = _clean_location_text(
-                location_raw if isinstance(location_raw, str) else ""
+            location_text, distance_km = _split_location_distance(
+                _clean_location_text(
+                    location_raw if isinstance(location_raw, str) else ""
+                )
             )
 
             return {
@@ -379,6 +402,7 @@ class UltraOptimizedScraper:
                 "title": title_text if isinstance(title_text, str) else "",
                 "price": price_text,
                 "location": location_text,
+                "distance_km": distance_km,
                 "description": description_text
                 if isinstance(description_text, str)
                 else "",
