@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
+from schemas import ErrorResponse, SearchResponse
 
 router = APIRouter()
 
@@ -13,7 +14,15 @@ class InserateByUrlRequest(BaseModel):
     min_publish_date: Optional[datetime] = None
 
 
-@router.post("/inserate-by-url")
+@router.post(
+    "/inserate-by-url",
+    response_model=SearchResponse,
+    response_model_exclude_unset=True,
+    responses={
+        500: {"model": ErrorResponse, "description": "Scrape failed"},
+        503: {"model": ErrorResponse, "description": "Browser manager not initialized"},
+    },
+)
 async def inserate_by_url(request: Request, body: InserateByUrlRequest):
     """
     Scrape Kleinanzeigen listings using a full URL with all filters pre-configured.

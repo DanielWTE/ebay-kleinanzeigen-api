@@ -10,11 +10,20 @@ from fastapi import APIRouter, Query, HTTPException, Request
 
 from scrapers.inserate_ultra_optimized import ultra_optimized_scrape_inserate
 from scrapers.inserat import get_inserate_details_optimized
+from schemas import DetailedSearchResponse, ErrorResponse
 
 router = APIRouter()
 
 
-@router.get("/inserate-detailed")
+@router.get(
+    "/inserate-detailed",
+    response_model=DetailedSearchResponse,
+    response_model_exclude_unset=True,
+    responses={
+        500: {"model": ErrorResponse, "description": "Listing search or detail fetch failed"},
+        503: {"model": ErrorResponse, "description": "Browser manager not initialized"},
+    },
+)
 async def get_inserate_with_details(
     request: Request,
     query: str = Query(None, description="Search query string"),

@@ -1,6 +1,7 @@
 import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from schemas import RootResponse
 from routers import (
     inserate_ultra as inserate,
     inserat,
@@ -55,7 +56,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(version="1.0.0", lifespan=lifespan)
 
 
-@app.get("/")
+@app.get("/", response_model=RootResponse)
 async def root():
     return {
         "message": "Welcome to the Kleinanzeigen API",
