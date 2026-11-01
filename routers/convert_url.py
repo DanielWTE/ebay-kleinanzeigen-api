@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+
 from utils.parse_kleinanzeigen_url import (
-    parse_kleinanzeigen_url,
     map_to_inserate_params,
+    parse_kleinanzeigen_url,
 )
 
 router = APIRouter()

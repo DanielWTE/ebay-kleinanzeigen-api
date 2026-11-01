@@ -1,5 +1,6 @@
+from fastapi import APIRouter, HTTPException, Query, Request
+
 from scrapers.inserat import get_inserate_details_optimized
-from fastapi import APIRouter, HTTPException, Request, Query
 
 router = APIRouter()
 

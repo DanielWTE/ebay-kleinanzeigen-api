@@ -3,7 +3,7 @@ Utility for parsing Kleinanzeigen URLs and mapping them to /inserate API params.
 """
 
 import re
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 def parse_kleinanzeigen_url(url: str) -> dict:
@@ -28,11 +28,7 @@ def parse_kleinanzeigen_url(url: str) -> dict:
 
     for i, seg in enumerate(segments):
         # Page — seite:2
-        if seg.startswith("seite:"):
-            result["page"] = int(seg.split(":")[1])
-
-        # Page (generic search) — s-seite:2
-        elif re.match(r"^s-seite:\d+$", seg):
+        if seg.startswith("seite:") or re.match(r"^s-seite:\d+$", seg):
             result["page"] = int(seg.split(":")[1])
 
         # Category slug — s-wohnwagen-mobile
@@ -62,7 +58,7 @@ def parse_kleinanzeigen_url(url: str) -> dict:
 
     # ── Filter segment ────────────────────────────────────────────────────
     if filter_segment:
-        fs = filter_segment[2:] if filter_segment.startswith("k0") else filter_segment
+        fs = filter_segment.removeprefix("k0")
 
         for attr in fs.split("+"):
             # Category ID — c220

@@ -9,7 +9,9 @@ import pytest
 pytestmark = pytest.mark.integration
 
 import asyncio
+import sys
 import time
+
 import aiohttp
 
 
@@ -244,10 +246,10 @@ async def main():
         success = await test_all_endpoints()
         return success
     except Exception as e:
-        print(f"\n❌ INTEGRATION TESTS FAILED: {str(e)}")
+        print(f"\n❌ INTEGRATION TESTS FAILED: {e!s}")
         return False
 
 
 if __name__ == "__main__":
     success = asyncio.run(main())
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

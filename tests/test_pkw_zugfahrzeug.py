@@ -10,6 +10,7 @@ Usage:
 import asyncio
 import json
 import sys
+
 import aiohttp
 
 BASE_URL = "http://localhost:8000"

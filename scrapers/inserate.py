@@ -1,20 +1,20 @@
 import asyncio
-import time
 import random
+import time
 from urllib.parse import urlencode
 
 from fastapi import HTTPException
 
-from utils.browser import PlaywrightManager, OptimizedPlaywrightManager
-from utils.performance import PageMetrics, track_page_performance
+from utils.browser import OptimizedPlaywrightManager, PlaywrightManager
 from utils.error_handling import (
     ErrorClassifier,
-    WarningManager,
-    ErrorLogger,
     ErrorContext,
+    ErrorLogger,
     ErrorSeverity,
+    WarningManager,
     error_handling_context,
 )
+from utils.performance import PageMetrics, track_page_performance
 
 
 async def get_ads(page):
@@ -203,11 +203,11 @@ async def optimized_fetch_page(
 
 async def get_inserate_klaz(
     browser_manager: PlaywrightManager,
-    query: str = None,
-    location: str = None,
-    radius: int = None,
-    min_price: int = None,
-    max_price: int = None,
+    query: str | None = None,
+    location: str | None = None,
+    radius: int | None = None,
+    min_price: int | None = None,
+    max_price: int | None = None,
     page_count: int = 1,
 ):
     base_url = "https://www.kleinanzeigen.de"
@@ -252,11 +252,11 @@ async def get_inserate_klaz(
 
 async def get_inserate_klaz_optimized(
     browser_manager: OptimizedPlaywrightManager,
-    query: str = None,
-    location: str = None,
-    radius: int = None,
-    min_price: int = None,
-    max_price: int = None,
+    query: str | None = None,
+    location: str | None = None,
+    radius: int | None = None,
+    min_price: int | None = None,
+    max_price: int | None = None,
     page_count: int = 1,
 ) -> dict:
     """

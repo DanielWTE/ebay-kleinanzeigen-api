@@ -14,15 +14,16 @@ Features:
 """
 
 import asyncio
-import aiohttp
-import time
-import statistics
 import json
 import random
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Optional
+import statistics
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
+from typing import Any
+
+import aiohttp
 
 
 class TestScenario(Enum):
@@ -43,11 +44,11 @@ class RequestResult:
     status_code: int
     response_time: float
     success: bool
-    error_message: Optional[str] = None
+    error_message: str | None = None
     response_size: int = 0
     user_id: int = 0
     timestamp: float = 0
-    request_params: Dict[str, Any] = None
+    request_params: dict[str, Any] = None
 
     def __post_init__(self):
         if self.timestamp == 0:
@@ -70,7 +71,7 @@ class UserMetrics:
     total_time: float
     requests_per_second: float
     error_rate: float
-    request_results: List[RequestResult]
+    request_results: list[RequestResult]
 
 
 @dataclass
@@ -100,17 +101,17 @@ class LoadTestReport:
     concurrent_users: int
 
     # Per-user metrics
-    user_metrics: List[UserMetrics]
+    user_metrics: list[UserMetrics]
 
     # Error analysis
-    error_breakdown: Dict[str, int]
-    status_code_breakdown: Dict[int, int]
+    error_breakdown: dict[str, int]
+    status_code_breakdown: dict[int, int]
 
     # Performance recommendations
-    recommendations: List[str]
+    recommendations: list[str]
 
     # Raw data for detailed analysis
-    all_request_results: List[RequestResult]
+    all_request_results: list[RequestResult]
 
 
 class LoadTester:
@@ -130,7 +131,7 @@ class LoadTester:
             base_url: Base URL of the API to test
         """
         self.base_url = base_url.rstrip("/")
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
         # Test configuration
         self.default_timeout = aiohttp.ClientTimeout(total=30)
@@ -194,7 +195,7 @@ class LoadTester:
             await self.session.close()
             self.session = None
 
-    def get_random_query_params(self) -> Dict[str, Any]:
+    def get_random_query_params(self) -> dict[str, Any]:
         """Generate random query parameters for realistic testing"""
         base_params = random.choice(self.sample_queries).copy()
 
@@ -216,7 +217,7 @@ class LoadTester:
         return random.choice(self.sample_listing_ids)
 
     async def make_request(
-        self, endpoint: str, params: Dict[str, Any] = None, user_id: int = 0
+        self, endpoint: str, params: dict[str, Any] | None = None, user_id: int = 0
     ) -> RequestResult:
         """
         Make a single API request with comprehensive error handling and metrics.
@@ -273,7 +274,7 @@ class LoadTester:
                     request_params=params or {},
                 )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             end_time = time.time()
             return RequestResult(
                 endpoint=endpoint,
@@ -295,7 +296,7 @@ class LoadTester:
                 status_code=0,
                 response_time=end_time - start_time,
                 success=False,
-                error_message=f"Connection error: {str(e)}",
+                error_message=f"Connection error: {e!s}",
                 user_id=user_id,
                 timestamp=start_time,
                 request_params=params or {},
@@ -432,7 +433,7 @@ class LoadTester:
         requests_per_user: int,
         scenario: TestScenario = TestScenario.MULTIPLE_USERS_STANDARD_LOAD,
         delay_between_requests: float = 0.1,
-    ) -> List[UserMetrics]:
+    ) -> list[UserMetrics]:
         """
         Simulate multiple concurrent users making API requests.
 
@@ -493,7 +494,7 @@ class LoadTester:
         return valid_metrics
 
     async def run_single_user_multiple_pages_test(
-        self, page_counts: List[int] = None, iterations: int = 3
+        self, page_counts: list[int] | None = None, iterations: int = 3
     ) -> LoadTestReport:
         """
         Test scenario: Single user making requests with varying page counts.
@@ -702,8 +703,8 @@ class LoadTester:
         scenario: TestScenario,
         start_time: datetime,
         end_time: datetime,
-        user_metrics: List[UserMetrics],
-        all_results: List[RequestResult],
+        user_metrics: list[UserMetrics],
+        all_results: list[RequestResult],
     ) -> LoadTestReport:
         """
         Generate comprehensive load test report with performance analysis.
@@ -844,8 +845,8 @@ class LoadTester:
         avg_response_time: float,
         p95_response_time: float,
         requests_per_second: float,
-        error_breakdown: Dict[str, int],
-    ) -> List[str]:
+        error_breakdown: dict[str, int],
+    ) -> list[str]:
         """Generate performance recommendations based on test results"""
         recommendations = []
 
@@ -913,12 +914,11 @@ class LoadTester:
                     "Check resource contention and error handling."
                 )
 
-        elif scenario == TestScenario.STRESS_TEST:
-            if success_rate < 90.0:
-                recommendations.append(
-                    "Stress test success rate is below acceptable threshold. "
-                    "System may need additional capacity or better resource management."
-                )
+        elif scenario == TestScenario.STRESS_TEST and success_rate < 90.0:
+            recommendations.append(
+                "Stress test success rate is below acceptable threshold. "
+                "System may need additional capacity or better resource management."
+            )
 
         # General recommendations if no issues found
         if not recommendations:
@@ -1232,7 +1232,7 @@ class LoadTestRunner:
 
     async def run_comprehensive_test_suite(
         self, save_results: bool = True, output_dir: str = "load_test_results"
-    ) -> Dict[str, LoadTestReport]:
+    ) -> dict[str, LoadTestReport]:
         """
         Run a comprehensive test suite covering all scenarios.
 
@@ -1313,8 +1313,8 @@ class LoadTestRunner:
         return results
 
     def _generate_overall_recommendations(
-        self, results: Dict[str, LoadTestReport]
-    ) -> List[str]:
+        self, results: dict[str, LoadTestReport]
+    ) -> list[str]:
         """Generate overall recommendations based on all test results"""
         recommendations = []
 

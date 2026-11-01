@@ -1,7 +1,8 @@
 import asyncio
 import os
-from typing import List
-from playwright.async_api import async_playwright, BrowserContext, Page
+
+from playwright.async_api import BrowserContext, Page, async_playwright
+
 from utils.user_agent import get_random_ua
 
 # External CDP endpoint (e.g. BrowserUse cloud session, browserless, plain
@@ -40,8 +41,8 @@ class OptimizedPlaywrightManager:
     def __init__(self, max_contexts: int = 10, max_concurrent: int = 5):
         self._playwright = None
         self._browser = None
-        self._context_pool: List[BrowserContext] = []
-        self._context_in_use: List[BrowserContext] = []
+        self._context_pool: list[BrowserContext] = []
+        self._context_in_use: list[BrowserContext] = []
         self._max_contexts = max_contexts
         self._semaphore = asyncio.Semaphore(max_concurrent)
         self._context_lock = asyncio.Lock()

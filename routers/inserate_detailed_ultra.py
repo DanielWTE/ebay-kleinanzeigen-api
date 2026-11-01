@@ -5,11 +5,12 @@ Ultra-optimized combined endpoint for maximum performance.
 import asyncio
 import time
 import uuid
-from typing import Dict, Any
-from fastapi import APIRouter, Query, HTTPException, Request
+from typing import Any
 
-from scrapers.inserate_ultra_optimized import ultra_optimized_scrape_inserate
+from fastapi import APIRouter, HTTPException, Query, Request
+
 from scrapers.inserat import get_inserate_details_optimized
+from scrapers.inserate_ultra_optimized import ultra_optimized_scrape_inserate
 
 router = APIRouter()
 
@@ -73,7 +74,7 @@ async def get_inserate_with_details(
         detail_request_id = f"req-{uuid.uuid4().hex[:8]}"
         total_listings = len(listings)
 
-        async def fetch_single_detail(listing: Dict[str, Any], index: int):
+        async def fetch_single_detail(listing: dict[str, Any], index: int):
             """Fetch details for a single listing."""
             try:
                 listing_id = listing.get("adid")

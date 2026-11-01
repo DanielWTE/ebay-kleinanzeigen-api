@@ -8,21 +8,22 @@ processing while maintaining comprehensive error handling for partial failures.
 
 import asyncio
 import time
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Query, HTTPException, Request
+from typing import Any
 
-from scrapers.inserate import get_inserate_klaz_optimized
+from fastapi import APIRouter, HTTPException, Query, Request
+
 from scrapers.inserat import get_inserate_details_optimized
+from scrapers.inserate import get_inserate_klaz_optimized
 from utils.browser import OptimizedPlaywrightManager
-from utils.performance import PerformanceTracker, PageMetrics
 from utils.error_handling import (
     ErrorClassifier,
-    WarningManager,
-    ErrorLogger,
     ErrorContext,
+    ErrorLogger,
     ErrorSeverity,
+    WarningManager,
     error_handling_context,
 )
+from utils.performance import PageMetrics, PerformanceTracker
 
 router = APIRouter()
 
@@ -70,9 +71,9 @@ def optimize_concurrent_detail_fetching(
 
 async def fetch_listing_details_concurrent(
     browser_manager: OptimizedPlaywrightManager,
-    listings: List[Dict[str, Any]],
+    listings: list[dict[str, Any]],
     max_concurrent_details: int = 5,
-) -> tuple[List[Dict[str, Any]], List[PageMetrics], List[str]]:
+) -> tuple[list[dict[str, Any]], list[PageMetrics], list[str]]:
     """
     Optimized concurrent detail fetching for all listings found in search results.
 
@@ -101,12 +102,12 @@ async def fetch_listing_details_concurrent(
     detail_phase_start = time.time()
 
     async def fetch_single_detail_with_retry(
-        listing: Dict[str, Any],
+        listing: dict[str, Any],
         index: int,
         max_retries: int = 2,
         warning_manager: WarningManager = None,
         logger: ErrorLogger = None,
-    ) -> tuple[Optional[Dict[str, Any]], PageMetrics]:
+    ) -> tuple[dict[str, Any] | None, PageMetrics]:
         """
         Fetch details for a single listing with comprehensive error handling and retry logic.
 

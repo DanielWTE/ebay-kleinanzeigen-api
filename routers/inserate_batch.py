@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-from typing import List
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -11,7 +10,7 @@ router = APIRouter()
 
 
 class InsérateBatchRequest(BaseModel):
-    ids: List[str]
+    ids: list[str]
     max_concurrent: int = 1
 
 
@@ -50,8 +49,8 @@ async def get_inserate_batch(request: Request, body: InsérateBatchRequest):
     tasks = [fetch_one(lid, i + 1) for i, lid in enumerate(ids)]
     raw = await asyncio.gather(*tasks, return_exceptions=True)
 
-    results: List[dict] = []
-    errors: List[str] = []
+    results: list[dict] = []
+    errors: list[str] = []
     for lid, outcome in zip(ids, raw):
         if isinstance(outcome, Exception):
             errors.append(f"{lid}: {outcome}")

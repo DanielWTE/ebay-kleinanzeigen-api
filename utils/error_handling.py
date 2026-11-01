@@ -9,10 +9,10 @@ while maintaining comprehensive debugging information.
 import logging
 import time
 import traceback
-from enum import Enum
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
 from contextlib import contextmanager
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
 
 
 class ErrorCategory(Enum):
@@ -60,17 +60,17 @@ class ErrorContext:
     """
 
     operation: str  # The operation being performed when error occurred
-    page_number: Optional[int] = None
-    url: Optional[str] = None
-    listing_id: Optional[str] = None
+    page_number: int | None = None
+    url: str | None = None
+    listing_id: str | None = None
     retry_attempt: int = 0
     timestamp: float = field(default_factory=time.time)
-    browser_context_id: Optional[str] = None
+    browser_context_id: str | None = None
     concurrent_operations: int = 0
-    memory_usage: Optional[Dict[str, Any]] = None
-    additional_data: Dict[str, Any] = field(default_factory=dict)
+    memory_usage: dict[str, Any] | None = None
+    additional_data: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging and API responses."""
         return {
             "operation": self.operation,
@@ -96,9 +96,9 @@ class StructuredError:
     category: ErrorCategory
     severity: ErrorSeverity
     context: ErrorContext
-    original_exception: Optional[Exception] = None
-    stack_trace: Optional[str] = None
-    recovery_suggestions: List[str] = field(default_factory=list)
+    original_exception: Exception | None = None
+    stack_trace: str | None = None
+    recovery_suggestions: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Capture stack trace if original exception is provided."""
@@ -109,7 +109,7 @@ class StructuredError:
                 self.original_exception.__traceback__,
             )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging and API responses."""
         return {
             "message": self.message,
@@ -146,13 +146,13 @@ class Warning:
     message: str
     severity: ErrorSeverity
     context: ErrorContext
-    affected_items: List[str] = field(
+    affected_items: list[str] = field(
         default_factory=list
     )  # IDs or descriptions of affected items
-    impact_description: Optional[str] = None
+    impact_description: str | None = None
     timestamp: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "message": self.message,
@@ -350,16 +350,16 @@ class WarningManager:
     """
 
     def __init__(self):
-        self.warnings: List[Warning] = []
-        self._warning_counts: Dict[str, int] = {}
+        self.warnings: list[Warning] = []
+        self._warning_counts: dict[str, int] = {}
 
     def add_warning(
         self,
         message: str,
         severity: ErrorSeverity,
         context: ErrorContext,
-        affected_items: List[str] = None,
-        impact_description: str = None,
+        affected_items: list[str] | None = None,
+        impact_description: str | None = None,
     ) -> None:
         """Add a warning to the collection."""
         warning = Warning(
@@ -379,8 +379,8 @@ class WarningManager:
     def add_error_as_warning(
         self,
         error: StructuredError,
-        affected_items: List[str] = None,
-        impact_description: str = None,
+        affected_items: list[str] | None = None,
+        impact_description: str | None = None,
     ) -> None:
         """Convert a structured error to a warning for partial failure handling."""
         self.add_warning(
@@ -391,11 +391,11 @@ class WarningManager:
             impact_description=impact_description,
         )
 
-    def get_warnings(self) -> List[Warning]:
+    def get_warnings(self) -> list[Warning]:
         """Get all collected warnings."""
         return self.warnings.copy()
 
-    def get_warning_summary(self) -> Dict[str, Any]:
+    def get_warning_summary(self) -> dict[str, Any]:
         """Get a summary of warnings by severity and frequency."""
         if not self.warnings:
             return {"total_warnings": 0, "by_severity": {}, "most_frequent": []}
@@ -422,7 +422,7 @@ class WarningManager:
         """Check if there are any critical warnings."""
         return any(w.severity == ErrorSeverity.CRITICAL for w in self.warnings)
 
-    def get_user_friendly_messages(self) -> List[str]:
+    def get_user_friendly_messages(self) -> list[str]:
         """Get user-friendly warning messages for API responses."""
         messages = []
 
@@ -541,8 +541,8 @@ class ErrorLogger:
         operation: str,
         total_items: int,
         successful_items: int,
-        warnings: List[Warning],
-        errors: List[StructuredError],
+        warnings: list[Warning],
+        errors: list[StructuredError],
         duration: float,
     ) -> None:
         """Log a summary of an operation with success/failure statistics."""
@@ -576,9 +576,9 @@ class ErrorLogger:
 @contextmanager
 def error_handling_context(
     operation: str,
-    page_number: int = None,
-    url: str = None,
-    listing_id: str = None,
+    page_number: int | None = None,
+    url: str | None = None,
+    listing_id: str | None = None,
     logger: ErrorLogger = None,
 ):
     """
@@ -597,7 +597,7 @@ def error_handling_context(
             self.context = context
             self.logger = logger or ErrorLogger()
             self.warnings = WarningManager()
-            self.errors: List[StructuredError] = []
+            self.errors: list[StructuredError] = []
             self.start_time = time.time()
 
         def add_warning(
@@ -607,7 +607,7 @@ def error_handling_context(
             self.warnings.add_warning(message, severity, self.context, **kwargs)
 
         def handle_exception(
-            self, exception: Exception, operation_type: str = None
+            self, exception: Exception, operation_type: str | None = None
         ) -> StructuredError:
             """Handle an exception and convert it to a structured error."""
             error = ErrorClassifier.classify_exception(

@@ -1,16 +1,22 @@
 import sys
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+
 from routers import (
-    inserate_ultra as inserate,
-    inserat,
-    inserate_detailed_ultra as inserate_detailed,
-    inserate_batch,
     convert_url,
+    inserat,
+    inserate_batch,
     inserate_by_url,
 )
-from utils.browser import OptimizedPlaywrightManager
+from routers import (
+    inserate_detailed_ultra as inserate_detailed,
+)
+from routers import (
+    inserate_ultra as inserate,
+)
 from utils.asyncio_optimizations import EventLoopOptimizer
+from utils.browser import OptimizedPlaywrightManager
 
 # Global browser manager instance for sharing across all endpoints
 browser_manager = None

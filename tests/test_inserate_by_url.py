@@ -12,6 +12,7 @@ import asyncio
 import json
 import sys
 from pathlib import Path
+
 import aiohttp
 
 BASE_URL = "http://localhost:8000"

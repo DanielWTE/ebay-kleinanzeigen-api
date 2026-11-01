@@ -16,8 +16,8 @@ Deleted-ad tests use a known-expired ID. If that ID is ever recycled by
 Kleinanzeigen the deleted-ad tests will need a new ID.
 """
 
-import pytest
 import httpx
+import pytest
 
 BASE_URL = "http://localhost:8000"
 
