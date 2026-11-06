@@ -21,6 +21,7 @@ from scrapers.inserate_ultra_optimized import (
     UltraOptimizedScraper,
     _page_has_old_listings,
     _parse_ad_previews,
+    _split_location_distance,
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "search_results_astro.html"
@@ -197,3 +198,42 @@ def test_old_top_ad_does_not_stop_pagination():
 
     page.append({"published_at": "2026-10-06T23:59:00", "is_top_ad": False})
     assert _page_has_old_listings(page, cutoff) is True
+
+
+@pytest.mark.parametrize(
+    "text, location, distance",
+    [
+        ("14979 Großbeeren (12 km)", "14979 Großbeeren", 12.0),
+        ("14979 Großbeeren (12,5 km)", "14979 Großbeeren", 12.5),
+        ("14979 Großbeeren(3 km)", "14979 Großbeeren", 3.0),
+        ("14979 Großbeeren", "14979 Großbeeren", None),
+    ],
+)
+def test_split_location_distance(text, location, distance):
+    assert _split_location_distance(text) == (location, distance)
+
+
+def _block_card(adid: str, lines: list) -> str:
+    # Distance on its own block-level line, as in the Astro card layout
+    body = "".join(f"<div>{line}</div>" for line in lines)
+    return (
+        f'<li><article data-adid="{adid}" data-href="/s-anzeige/x/{adid}-217-1">'
+        f"{body}<h3><a>Fahrrad {adid}</a></h3><p>Teaser</p></article></li>"
+    )
+
+
+def test_distance_is_standalone_field():
+    page = (
+        "<!doctype html><html><body><ul>"
+        + _block_card("1", ["14979 Großbeeren", "(12 km)"])
+        + _block_card("2", ["14979 Großbeeren", "(12,5 km)"])
+        + _block_card("3", ["14979 Großbeeren"])
+        + "</ul></body></html>"
+    )
+    ads = {ad["adid"]: ad for ad in asyncio.run(_extract(page))}
+    assert ads["1"]["location"] == "14979 Großbeeren"
+    assert ads["1"]["distance_km"] == 12.0
+    assert ads["2"]["location"] == "14979 Großbeeren"
+    assert ads["2"]["distance_km"] == 12.5
+    assert ads["3"]["location"] == "14979 Großbeeren"
+    assert ads["3"]["distance_km"] is None
