@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Query, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
+
 from scrapers.inserate import get_inserate_klaz_optimized
-from utils.error_handling import ErrorLogger, error_handling_context, ErrorSeverity
+from utils.error_handling import ErrorLogger, ErrorSeverity, error_handling_context
 
 router = APIRouter()
 

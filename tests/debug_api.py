@@ -3,8 +3,9 @@ Debug script to check API responses and identify issues.
 """
 
 import asyncio
-import aiohttp
 import json
+
+import aiohttp
 
 
 async def debug_api():

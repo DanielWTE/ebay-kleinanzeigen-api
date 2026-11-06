@@ -1,26 +1,27 @@
 import re
-from typing import Dict, List, Optional, Union, Any
-from playwright.async_api import Page, ElementHandle
+from typing import Any
+
+from playwright.async_api import ElementHandle, Page
 
 
 async def get_element_content(
     page: Page, selector: str, default: Any = None
-) -> Optional[str]:
-    element: Optional[ElementHandle] = await page.query_selector(selector)
+) -> str | None:
+    element: ElementHandle | None = await page.query_selector(selector)
     if element:
         return await element.inner_text()
     return default
 
 
-async def get_elements_content(page: Page, selector: str) -> List[str]:
-    elements: List[ElementHandle] = await page.query_selector_all(selector)
+async def get_elements_content(page: Page, selector: str) -> list[str]:
+    elements: list[ElementHandle] = await page.query_selector_all(selector)
     return [await element.text_content() for element in elements]
 
 
-async def get_image_sources(page: Page, selector: str) -> List[str]:
-    elements: List[ElementHandle] = await page.query_selector_all(selector)
+async def get_image_sources(page: Page, selector: str) -> list[str]:
+    elements: list[ElementHandle] = await page.query_selector_all(selector)
     seen: set = set()
-    images: List[str] = []
+    images: list[str] = []
     for el in elements:
         src: str = (
             await el.get_attribute("src") or await el.get_attribute("data-src") or ""
@@ -31,7 +32,7 @@ async def get_image_sources(page: Page, selector: str) -> List[str]:
     return images
 
 
-def parse_price(price_text: Optional[str]) -> Dict[str, Union[str, bool]]:
+def parse_price(price_text: str | None) -> dict[str, str | bool]:
     if not price_text:
         return {"amount": "0", "currency": "€", "negotiable": False}
 
@@ -45,7 +46,7 @@ def parse_price(price_text: Optional[str]) -> Dict[str, Union[str, bool]]:
     return {"amount": amount, "currency": "€", "negotiable": negotiable}
 
 
-def _extract_user_id(href: str) -> Optional[str]:
+def _extract_user_id(href: str) -> str | None:
     """Extract the numeric Kleinanzeigen user ID from a profile link href.
 
     Handles two URL patterns:
@@ -61,7 +62,7 @@ def _extract_user_id(href: str) -> Optional[str]:
     return None
 
 
-async def get_seller_details(page: Page) -> Dict[str, Optional[str]]:
+async def get_seller_details(page: Page) -> dict[str, str | None]:
     result = {
         "name": None,
         "user_id": None,
@@ -110,16 +111,16 @@ async def get_seller_details(page: Page) -> Dict[str, Optional[str]]:
         ]
 
     except Exception as e:
-        print(f"Error getting seller details: {str(e)}")
+        print(f"Error getting seller details: {e!s}")
 
     return result
 
 
-async def get_details(page: Page) -> Dict[str, str]:
-    details: Dict[str, str] = {}
+async def get_details(page: Page) -> dict[str, str]:
+    details: dict[str, str] = {}
     try:
         # Get all detail items
-        detail_items: List[ElementHandle] = await page.query_selector_all(
+        detail_items: list[ElementHandle] = await page.query_selector_all(
             "#viewad-details .addetailslist--detail"
         )
 
@@ -127,7 +128,7 @@ async def get_details(page: Page) -> Dict[str, str]:
             # Extract label (everything before the span)
             content: str = await item.text_content()
             # Find the span element inside
-            value_span: Optional[ElementHandle] = await item.query_selector(
+            value_span: ElementHandle | None = await item.query_selector(
                 ".addetailslist--detail--value"
             )
 
@@ -137,15 +138,15 @@ async def get_details(page: Page) -> Dict[str, str]:
                 label: str = content.replace(value, "").strip()
                 details[label] = value.strip()
     except Exception as e:
-        print(f"Error getting details: {str(e)}")
+        print(f"Error getting details: {e!s}")
 
     return details
 
 
-async def get_features(page: Page) -> List[str]:
-    features: List[str] = []
+async def get_features(page: Page) -> list[str]:
+    features: list[str] = []
     try:
-        feature_elements: List[ElementHandle] = await page.query_selector_all(
+        feature_elements: list[ElementHandle] = await page.query_selector_all(
             "#viewad-configuration .checktaglist .checktag"
         )
         for feature in feature_elements:
@@ -153,22 +154,22 @@ async def get_features(page: Page) -> List[str]:
             if feature_text and feature_text.strip():
                 features.append(feature_text.strip())
     except Exception as e:
-        print(f"Error getting features: {str(e)}")
+        print(f"Error getting features: {e!s}")
 
     return features
 
 
-async def get_location(page: Page) -> Dict[str, str]:
-    location: Optional[str] = await get_element_content(page, "#viewad-locality")
+async def get_location(page: Page) -> dict[str, str]:
+    location: str | None = await get_element_content(page, "#viewad-locality")
     if not location:
         return {"zip": "", "city": "", "state": ""}
 
-    location_parts: List[str] = (
+    location_parts: list[str] = (
         location.split(" - ") if " - " in location else [location]
     )
 
     first_part: str = location_parts[0].strip()
-    zip_state_parts: List[str] = first_part.split(" ", 1)
+    zip_state_parts: list[str] = first_part.split(" ", 1)
     zip_code: str = zip_state_parts[0].strip()
     state: str = zip_state_parts[1].strip() if len(zip_state_parts) > 1 else ""
 
@@ -177,22 +178,22 @@ async def get_location(page: Page) -> Dict[str, str]:
     return {"zip": zip_code, "city": city, "state": state}
 
 
-async def get_extra_info(page: Page) -> Dict[str, Optional[str]]:
-    result: Dict[str, Optional[str]] = {"created_at": None, "views": "0"}
+async def get_extra_info(page: Page) -> dict[str, str | None]:
+    result: dict[str, str | None] = {"created_at": None, "views": "0"}
 
     try:
-        date_element: Optional[ElementHandle] = await page.query_selector(
+        date_element: ElementHandle | None = await page.query_selector(
             "#viewad-extra-info > div:nth-child(1) > span"
         )
         if date_element:
             result["created_at"] = await date_element.inner_text()
 
-        views_element: Optional[ElementHandle] = await page.query_selector(
+        views_element: ElementHandle | None = await page.query_selector(
             "#viewad-cntr-num"
         )
         if views_element:
             result["views"] = await views_element.inner_text()
     except Exception as e:
-        print(f"Error getting extra info: {str(e)}")
+        print(f"Error getting extra info: {e!s}")
 
     return result

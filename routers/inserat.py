@@ -1,6 +1,7 @@
-from scrapers.inserat import get_inserate_details_optimized
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+
 from schemas import ErrorResponse, ListingDetailResponse, ListingNotFoundResponse
+from scrapers.inserat import get_inserate_details_optimized
 
 router = APIRouter()
 
@@ -11,7 +12,10 @@ router = APIRouter()
     response_model_exclude_unset=True,
     responses={
         400: {"model": ErrorResponse, "description": "Blank listing ID"},
-        404: {"model": ListingNotFoundResponse, "description": "Ad not found or deleted"},
+        404: {
+            "model": ListingNotFoundResponse,
+            "description": "Ad not found or deleted",
+        },
         500: {"model": ErrorResponse, "description": "Failed to fetch listing details"},
         503: {"model": ErrorResponse, "description": "Browser manager not initialized"},
     },

@@ -19,12 +19,14 @@ Options:
     --help          Show this help message
 """
 
-import sys
-import asyncio
 import argparse
+import asyncio
+import sys
 import time
 from pathlib import Path
+
 import aiohttp
+
 from tests.test_integration import run_comprehensive_integration_tests
 from tests.test_performance_validation import run_performance_validation
 
@@ -39,16 +41,18 @@ async def check_api_availability(base_url: str) -> bool:
     """Check if the API is available before running tests"""
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(
                 f"{base_url}/", timeout=aiohttp.ClientTimeout(total=10)
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("browser_status") == "optimized"
-                return False
+            ) as response,
+        ):
+            if response.status == 200:
+                data = await response.json()
+                return data.get("browser_status") == "optimized"
+            return False
     except Exception as e:
-        print(f"❌ API not available at {base_url}: {str(e)}")
+        print(f"❌ API not available at {base_url}: {e!s}")
         return False
 
 
@@ -58,9 +62,9 @@ async def run_quick_tests():
 
     # Import specific test functions for quick testing
     from tests.test_integration import (
-        test_root_endpoint,
-        test_inserate_endpoint_functionality,
         test_20_page_performance_requirement,
+        test_inserate_endpoint_functionality,
+        test_root_endpoint,
     )
 
     try:
@@ -72,7 +76,7 @@ async def run_quick_tests():
         return True
 
     except Exception as e:
-        print(f"\n❌ Quick tests failed: {str(e)}")
+        print(f"\n❌ Quick tests failed: {e!s}")
         return False
 
 
@@ -91,7 +95,7 @@ async def run_performance_tests():
         return success
 
     except Exception as e:
-        print(f"\n❌ Performance tests failed: {str(e)}")
+        print(f"\n❌ Performance tests failed: {e!s}")
         return False
 
 
@@ -130,7 +134,7 @@ async def run_full_tests():
         return overall_success
 
     except Exception as e:
-        print(f"\n❌ Full test suite failed: {str(e)}")
+        print(f"\n❌ Full test suite failed: {e!s}")
         return False
 
 
@@ -210,7 +214,7 @@ async def main():
         print("\n⚠️  Tests interrupted by user")
         return False
     except Exception as e:
-        print(f"\n❌ Unexpected error: {str(e)}")
+        print(f"\n❌ Unexpected error: {e!s}")
         return False
 
 
@@ -222,5 +226,5 @@ if __name__ == "__main__":
         print("\n⚠️  Interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Fatal error: {str(e)}")
+        print(f"\n❌ Fatal error: {e!s}")
         sys.exit(1)

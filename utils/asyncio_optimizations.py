@@ -6,13 +6,14 @@ to maximize performance and minimize memory usage.
 """
 
 import asyncio
-import time
 import gc
+import time
 import weakref
-from typing import List, Callable, Any, Optional, Dict
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from functools import partial
+from typing import Any
 
 
 @dataclass
@@ -23,7 +24,7 @@ class TaskMetrics:
     start_time: float
     end_time: float
     success: bool
-    memory_usage: Optional[int] = None
+    memory_usage: int | None = None
 
     @property
     def duration(self) -> float:
@@ -44,11 +45,11 @@ class HighPerformanceTaskManager:
     def __init__(self, max_concurrent: int = 10):
         self.tasks: weakref.WeakSet = weakref.WeakSet()
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self._task_metrics: Dict[str, TaskMetrics] = {}
+        self._task_metrics: dict[str, TaskMetrics] = {}
         self._cleanup_interval = 30.0  # seconds
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self._cleanup_task: asyncio.Task | None = None
 
-    def create_task(self, coro, task_id: str = None) -> asyncio.Task:
+    def create_task(self, coro, task_id: str | None = None) -> asyncio.Task:
         """Create a task with automatic cleanup and metrics tracking."""
         if task_id is None:
             task_id = f"task_{id(coro)}"
@@ -81,7 +82,7 @@ class HighPerformanceTaskManager:
                     # In production, you'd log this properly
                     print(f"Task {task_id} failed: {e}")
 
-    async def execute_with_semaphore(self, coro, task_id: str = None):
+    async def execute_with_semaphore(self, coro, task_id: str | None = None):
         """Execute a coroutine with semaphore control."""
         async with self.semaphore:
             if task_id:
@@ -90,7 +91,7 @@ class HighPerformanceTaskManager:
             else:
                 return await coro
 
-    async def gather_with_limit(self, coroutines: List, return_exceptions: bool = True):
+    async def gather_with_limit(self, coroutines: list, return_exceptions: bool = True):
         """
         Execute multiple coroutines with concurrency limiting.
 
@@ -120,7 +121,7 @@ class HighPerformanceTaskManager:
                 asyncio.gather(*list(self.tasks), return_exceptions=True),
                 timeout=timeout,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Force kill any remaining tasks
             for task in list(self.tasks):
                 if not task.done():
@@ -129,7 +130,7 @@ class HighPerformanceTaskManager:
             # Final cleanup
             await asyncio.gather(*list(self.tasks), return_exceptions=True)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get performance metrics for all tasks."""
         completed_tasks = [m for m in self._task_metrics.values() if m.end_time > 0]
 
@@ -200,8 +201,8 @@ class MemoryOptimizedProcessor:
         self.task_manager = HighPerformanceTaskManager(max_concurrent)
 
     async def process_batch(
-        self, items: List[Any], processor_func: Callable
-    ) -> List[Any]:
+        self, items: list[Any], processor_func: Callable
+    ) -> list[Any]:
         """
         Process a batch of items with memory optimization.
 

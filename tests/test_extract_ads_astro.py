@@ -138,7 +138,9 @@ _RESULT_ADS = [
     },
 ]
 
-_ISLAND_PROPS = json.dumps({"resultAds": _astro(_RESULT_ADS), "hasKeywords": _astro(True)})
+_ISLAND_PROPS = json.dumps(
+    {"resultAds": _astro(_RESULT_ADS), "hasKeywords": _astro(True)}
+)
 
 
 def _card(adid: str, location: str, date_text: str = "") -> str:
@@ -169,8 +171,14 @@ def top_ad_page_ads() -> dict:
 
 def test_top_ads_get_published_at_from_preview_data(top_ad_page_ads):
     # Issue #36: the first two (TOP) cards show no date on the card itself
-    assert top_ad_page_ads["3436158201"]["published_at"] == datetime(2026, 9, 13).isoformat()
-    assert top_ad_page_ads["3532985509"]["published_at"] == datetime(2026, 10, 6).isoformat()
+    assert (
+        top_ad_page_ads["3436158201"]["published_at"]
+        == datetime(2026, 9, 13).isoformat()
+    )
+    assert (
+        top_ad_page_ads["3532985509"]["published_at"]
+        == datetime(2026, 10, 6).isoformat()
+    )
     assert top_ad_page_ads["3436158201"]["is_top_ad"] is True
     assert top_ad_page_ads["3532985509"]["is_top_ad"] is True
 
@@ -178,7 +186,10 @@ def test_top_ads_get_published_at_from_preview_data(top_ad_page_ads):
 def test_regular_ad_keeps_card_date(top_ad_page_ads):
     today = date.today()
     ad = top_ad_page_ads["3535050266"]
-    assert ad["published_at"] == datetime(today.year, today.month, today.day, 20, 45).isoformat()
+    assert (
+        ad["published_at"]
+        == datetime(today.year, today.month, today.day, 20, 45).isoformat()
+    )
     assert ad["is_top_ad"] is False
 
 

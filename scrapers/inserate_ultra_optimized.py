@@ -6,33 +6,33 @@ the best possible performance for multi-page scraping operations.
 """
 
 import asyncio
-import time
-import random
 import gc
 import json
+import random
 import re
-from datetime import datetime, date, timedelta
+import time
+from datetime import date, datetime, timedelta
+from typing import Any
 from urllib.parse import urlencode
-from typing import List, Dict, Any, Optional, Tuple
 
 from fastapi import HTTPException
 
-from utils.browser import OptimizedPlaywrightManager
-from utils.performance import PageMetrics, PerformanceTracker
-from utils.error_handling import (
-    ErrorLogger,
-    WarningManager,
-    error_handling_context,
-    ErrorSeverity,
-    ErrorContext,
-    ErrorClassifier,
-)
 from utils.asyncio_optimizations import (
+    EventLoopOptimizer,
     HighPerformanceTaskManager,
     MemoryOptimizedProcessor,
-    EventLoopOptimizer,
     monitor_slow_coroutines,
 )
+from utils.browser import OptimizedPlaywrightManager
+from utils.error_handling import (
+    ErrorClassifier,
+    ErrorContext,
+    ErrorLogger,
+    ErrorSeverity,
+    WarningManager,
+    error_handling_context,
+)
+from utils.performance import PageMetrics, PerformanceTracker
 
 
 def _page_has_old_listings(results: list, min_publish_date: datetime) -> bool:
@@ -58,7 +58,7 @@ def _filter_by_min_publish_date(results: list, min_publish_date: datetime) -> li
     return out
 
 
-def _parse_kleinanzeigen_date(text: str) -> Optional[str]:
+def _parse_kleinanzeigen_date(text: str) -> str | None:
     """Convert a Kleinanzeigen listing date string to an ISO 8601 datetime string.
 
     Handles three formats:
@@ -101,13 +101,13 @@ def _decode_astro_value(value: Any) -> Any:
     return value
 
 
-def _parse_ad_previews(raw_props: List[str]) -> Dict[str, Dict[str, Any]]:
+def _parse_ad_previews(raw_props: list[str]) -> dict[str, dict[str, Any]]:
     """Map adid -> ad preview data from the search page's Astro island props.
 
     The preview data carries 'sortingDate' and 'topAd' for every listing,
     including top ads whose cards show no date (issue #36).
     """
-    previews: Dict[str, Dict[str, Any]] = {}
+    previews: dict[str, dict[str, Any]] = {}
 
     def collect(node: Any) -> None:
         if isinstance(node, dict):
@@ -122,7 +122,7 @@ def _parse_ad_previews(raw_props: List[str]) -> Dict[str, Dict[str, Any]]:
     for raw in raw_props:
         try:
             props = json.loads(raw)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             continue
         if isinstance(props, dict):
             collect({k: _decode_astro_value(v) for k, v in props.items()})
@@ -150,7 +150,7 @@ def _clean_location_text(text: str) -> str:
 _DISTANCE_RE = re.compile(r"\s*\((\d+(?:[.,]\d+)?)\s*km\)\s*$")
 
 
-def _split_location_distance(text: str) -> Tuple[str, Optional[float]]:
+def _split_location_distance(text: str) -> tuple[str, float | None]:
     """Split a trailing '(N km)' distance off a cleaned location string.
 
     Accepts integer and decimal distances ('(12 km)', '(12,5 km)').
@@ -189,7 +189,7 @@ class UltraOptimizedScraper:
         EventLoopOptimizer.setup_uvloop()
 
     @monitor_slow_coroutines(threshold=0.5)
-    async def extract_ads_optimized(self, page) -> List[Dict[str, Any]]:
+    async def extract_ads_optimized(self, page) -> list[dict[str, Any]]:
         """
         Optimized ad extraction with memory management.
 
@@ -233,7 +233,7 @@ class UltraOptimizedScraper:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def _get_ad_previews(self, page) -> Dict[str, Dict[str, Any]]:
+    async def _get_ad_previews(self, page) -> dict[str, dict[str, Any]]:
         """Read the per-ad preview data embedded in the page's Astro islands."""
         try:
             raw_props = await page.evaluate(
@@ -247,8 +247,8 @@ class UltraOptimizedScraper:
         return _parse_ad_previews(raw_props or [])
 
     async def _extract_single_ad(
-        self, article, previews: Optional[Dict[str, Dict[str, Any]]] = None
-    ) -> Dict[str, Any]:
+        self, article, previews: dict[str, dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Extract data from a single ad article element."""
         try:
             data_adid = await article.get_attribute("data-adid")
@@ -434,8 +434,8 @@ class UltraOptimizedScraper:
         url: str,
         page_num: int,
         retry_count: int = 2,
-        extra_selectors: Dict[str, str] = None,
-    ) -> Tuple[List[Dict], PageMetrics, Dict[str, str]]:
+        extra_selectors: dict[str, str] = None,
+    ) -> tuple[list[dict], PageMetrics, dict[str, str]]:
         """
         Ultra-optimized page fetching with all performance enhancements.
 
@@ -479,7 +479,7 @@ class UltraOptimizedScraper:
                     results = await self.extract_ads_optimized(page)
 
                     # Extract any caller-requested selectors from the same page
-                    extras: Dict[str, str] = {}
+                    extras: dict[str, str] = {}
                     if extra_selectors:
                         for key, selector in extra_selectors.items():
                             try:
@@ -560,7 +560,7 @@ class UltraOptimizedScraper:
         max_price: int = None,
         page_count: int = 1,
         min_publish_date: datetime = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Ultra-optimized multi-page scraping with all performance enhancements.
 
@@ -765,7 +765,7 @@ async def ultra_optimized_scrape_inserate(
     max_price: int = None,
     page_count: int = 1,
     min_publish_date: datetime = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Direct function for ultra-optimized scraping.
 

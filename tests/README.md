@@ -56,8 +56,7 @@ Tests performance with varying page counts to validate the 20-page < 3-second re
 ```python
 async with LoadTester() as tester:
     report = await tester.run_single_user_multiple_pages_test(
-        page_counts=[1, 5, 10, 20],
-        iterations=3
+        page_counts=[1, 5, 10, 20], iterations=3
     )
 ```
 
@@ -67,8 +66,7 @@ Simulates realistic concurrent usage patterns.
 ```python
 async with LoadTester() as tester:
     report = await tester.run_multiple_users_standard_load_test(
-        user_count=5,
-        requests_per_user=5
+        user_count=5, requests_per_user=5
     )
 ```
 
@@ -77,10 +75,7 @@ High-load testing with many concurrent users and large page counts.
 
 ```python
 async with LoadTester() as tester:
-    report = await tester.run_stress_test(
-        user_count=10,
-        requests_per_user=10
-    )
+    report = await tester.run_stress_test(user_count=10, requests_per_user=10)
 ```
 
 ### 4. Mixed Workload
@@ -88,10 +83,7 @@ Realistic mix of different endpoints and usage patterns.
 
 ```python
 async with LoadTester() as tester:
-    report = await tester.run_mixed_workload_test(
-        user_count=8,
-        requests_per_user=6
-    )
+    report = await tester.run_mixed_workload_test(user_count=8, requests_per_user=6)
 ```
 
 ## Custom Testing
@@ -102,20 +94,19 @@ async with LoadTester() as tester:
 import asyncio
 from load_test import LoadTester, TestScenario
 
+
 async def custom_test():
     async with LoadTester("http://localhost:8000") as tester:
         # Make individual requests
-        result = await tester.make_request("/inserate", {
-            "query": "laptop",
-            "page_count": 10
-        })
-        
+        result = await tester.make_request(
+            "/inserate", {"query": "laptop", "page_count": 10}
+        )
+
         # Simulate concurrent users
         user_metrics = await tester.simulate_concurrent_users(
-            user_count=3,
-            requests_per_user=5,
-            scenario=TestScenario.MIXED_WORKLOAD
+            user_count=3, requests_per_user=5, scenario=TestScenario.MIXED_WORKLOAD
         )
+
 
 asyncio.run(custom_test())
 ```
@@ -128,14 +119,15 @@ async def validate_20_page_requirement():
         # Test 20-page requests multiple times
         results = []
         for i in range(5):
-            result = await tester.make_request("/inserate", {
-                "query": "smartphone",
-                "page_count": 20
-            })
+            result = await tester.make_request(
+                "/inserate", {"query": "smartphone", "page_count": 20}
+            )
             results.append(result)
-        
+
         # Check if all requests completed in under 3 seconds
-        avg_time = sum(r.response_time for r in results if r.success) / len([r for r in results if r.success])
+        avg_time = sum(r.response_time for r in results if r.success) / len(
+            [r for r in results if r.success]
+        )
         print(f"Average 20-page response time: {avg_time:.2f}s")
         print(f"Requirement met: {avg_time < 3.0}")
 ```
@@ -254,6 +246,7 @@ For detailed debugging, modify the test script to include more logging:
 
 ```python
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Run tests with debug output

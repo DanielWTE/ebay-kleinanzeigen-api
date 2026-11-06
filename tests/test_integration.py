@@ -15,11 +15,12 @@ import pytest
 pytestmark = pytest.mark.integration
 
 import asyncio
-import time
 import statistics
-import aiohttp
-from typing import List, Dict, Any, Optional
+import time
 from dataclasses import dataclass
+from typing import Any
+
+import aiohttp
 
 
 @dataclass
@@ -30,8 +31,8 @@ class TestResult:
     success: bool
     response_time: float
     status_code: int
-    response_data: Optional[Dict[str, Any]]
-    error_message: Optional[str] = None
+    response_data: dict[str, Any] | None
+    error_message: str | None = None
 
 
 @dataclass
@@ -45,7 +46,7 @@ class ConcurrentTestResult:
     max_response_time: float
     min_response_time: float
     success_rate: float
-    response_times: List[float]
+    response_times: list[float]
 
 
 class IntegrationTester:
@@ -66,7 +67,7 @@ class IntegrationTester:
             await self.session.close()
 
     async def make_request(
-        self, endpoint: str, params: Dict[str, Any] = None, timeout: float = 30.0
+        self, endpoint: str, params: dict[str, Any] | None = None, timeout: float = 30.0
     ) -> TestResult:
         """Make a single API request with comprehensive error handling"""
         start_time = time.time()
@@ -79,7 +80,7 @@ class IntegrationTester:
                 try:
                     response_data = await response.json()
                 except Exception as e:
-                    response_data = {"error": f"Failed to parse JSON: {str(e)}"}
+                    response_data = {"error": f"Failed to parse JSON: {e!s}"}
 
                 return TestResult(
                     endpoint=endpoint,
@@ -101,7 +102,7 @@ class IntegrationTester:
             )
 
     async def test_endpoint_basic_functionality(
-        self, endpoint: str, params: Dict[str, Any] = None
+        self, endpoint: str, params: dict[str, Any] | None = None
     ) -> TestResult:
         """Test basic functionality of an endpoint"""
         return await self.make_request(endpoint, params)
@@ -109,10 +110,10 @@ class IntegrationTester:
     async def test_performance_requirement(
         self,
         endpoint: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         max_time: float,
         iterations: int = 3,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Test performance requirement with multiple iterations"""
         results = []
 
@@ -157,13 +158,13 @@ class IntegrationTester:
     async def test_concurrent_requests(
         self,
         endpoint: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         concurrent_users: int,
         requests_per_user: int,
     ) -> ConcurrentTestResult:
         """Test concurrent request handling"""
 
-        async def make_user_requests(user_id: int) -> List[TestResult]:
+        async def make_user_requests(user_id: int) -> list[TestResult]:
             """Make multiple requests for a single user"""
             user_results = []
             for request_id in range(requests_per_user):
@@ -236,8 +237,8 @@ class IntegrationTester:
         )
 
     async def validate_response_format(
-        self, result: TestResult, expected_fields: List[str]
-    ) -> Dict[str, Any]:
+        self, result: TestResult, expected_fields: list[str]
+    ) -> dict[str, Any]:
         """Validate response format for backward compatibility"""
         if not result.success:
             return {
@@ -690,7 +691,7 @@ async def run_comprehensive_integration_tests():
     except Exception as e:
         total_time = time.time() - start_time
         print("\n❌ INTEGRATION TEST SUITE FAILED")
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
         print(f"Total test time: {total_time:.2f} seconds")
         print("=" * 80)
 

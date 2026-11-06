@@ -8,6 +8,9 @@
   </p>
 
   <p align="center">
+    <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
+  </p>
+  <p align="center">
     <b>🚀 Looking for a ready-to-use solution?</b>
     <br />
     Try it at <a href="https://kleinanzeigen-agent.de/features/developer-api"><strong>kleinanzeigen-agent.de »</strong></a>
@@ -548,7 +551,7 @@ Performance tests conducted on **Arch Linux** with **Intel i7-1260P** processor:
 ### Performance Highlights
 
 - **Single page search**: ~1.2s average response time
-- **10-page search**: ~5.0s average response time  
+- **10-page search**: ~5.0s average response time
 - **Individual listing details**: ~1.1s average response time
 - **Combined search + details**: ~9.1s average for 1 page with full details
 
@@ -599,13 +602,13 @@ but lives in a different location.
 
 ```python
 # Before
-image = response["data"]["images"]        # single URL string or list of one
+image = response["data"]["images"]  # single URL string or list of one
 views = response["data"]["views"]
 
 # After
-images = response["data"]["media"]["images"]["urls"]   # list of all gallery images
-count  = response["data"]["media"]["images"]["count"]
-views  = response["data"]["extra_info"]["views"]       # unchanged
+images = response["data"]["media"]["images"]["urls"]  # list of all gallery images
+count = response["data"]["media"]["images"]["count"]
+views = response["data"]["extra_info"]["views"]  # unchanged
 ```
 
 ```javascript

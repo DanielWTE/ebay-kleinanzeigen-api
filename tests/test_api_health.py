@@ -13,8 +13,10 @@ import pytest
 pytestmark = pytest.mark.integration
 
 import asyncio
-import aiohttp
+import sys
 import time
+
+import aiohttp
 
 
 async def test_api_health(base_url: str = "http://localhost:8000"):
@@ -106,7 +108,7 @@ async def test_api_health(base_url: str = "http://localhost:8000"):
             return True
 
         except Exception as e:
-            print(f"\n❌ API health check failed: {str(e)}")
+            print(f"\n❌ API health check failed: {e!s}")
             return False
 
 
@@ -131,4 +133,4 @@ async def main():
 
 if __name__ == "__main__":
     success = asyncio.run(main())
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

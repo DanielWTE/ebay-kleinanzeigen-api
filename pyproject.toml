@@ -17,8 +17,21 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.0.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.4.0",
+]
+[tool.ruff.lint]
+ignore = [
+    "BLE001",
+    "DTZ",
+    "B008",
+    "S110",
+    "RUF013",
+    "EXE001",
+    "PLR1722",
+    "B023",
+    "B025",
 ]
 
 [tool.pytest.ini_options]

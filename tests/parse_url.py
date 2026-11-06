@@ -9,10 +9,10 @@ Examples:
   python tests/parse_url.py "https://www.kleinanzeigen.de/s-wohnwagen-mobile/wohnwagen/preis:1000:15000/klima/k0c220+wohnwagen_mobile.art_s:wohnwagen+wohnwagen_mobile.ez_i:2008%2C+wohnwagen_mobile.marke_s:(fendt%2Cknaus)"
 """
 
+import json
 import re
 import sys
-import json
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 def parse_kleinanzeigen_url(url: str) -> dict:
@@ -37,11 +37,7 @@ def parse_kleinanzeigen_url(url: str) -> dict:
 
     for i, seg in enumerate(segments):
         # Page — seite:2
-        if seg.startswith("seite:"):
-            result["page"] = int(seg.split(":")[1])
-
-        # Page (generic search) — s-seite:2
-        elif re.match(r"^s-seite:\d+$", seg):
+        if seg.startswith("seite:") or re.match(r"^s-seite:\d+$", seg):
             result["page"] = int(seg.split(":")[1])
 
         # Category slug — s-wohnwagen-mobile  (first segment starting with s-)
@@ -71,7 +67,7 @@ def parse_kleinanzeigen_url(url: str) -> dict:
     # ── Filter segment ────────────────────────────────────────────────────
     if filter_segment:
         # Strip k0 prefix (present when a path keyword exists)
-        fs = filter_segment[2:] if filter_segment.startswith("k0") else filter_segment
+        fs = filter_segment.removeprefix("k0")
 
         for attr in fs.split("+"):
             # Category ID — c220

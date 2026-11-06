@@ -15,8 +15,9 @@ Examples:
     python tests/run_load_tests.py https://api.example.com
 """
 
-import asyncio
 import argparse
+import asyncio
+
 from load_test import (
     LoadTester,
     LoadTestRunner,
@@ -208,7 +209,7 @@ def main():
         epilog="""
 Examples:
   %(prog)s --quick                    # Run quick performance test
-  %(prog)s --individual               # Run individual scenario examples  
+  %(prog)s --individual               # Run individual scenario examples
   %(prog)s --comprehensive            # Run comprehensive test suite
   %(prog)s --validation               # Run performance validation
   %(prog)s --custom                   # Run custom test patterns

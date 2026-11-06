@@ -5,11 +5,11 @@ This module provides structured data classes and utilities for measuring
 timing, success rates, and resource usage across the application.
 """
 
-import time
 import statistics
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -22,9 +22,9 @@ class PageMetrics:
     end_time: float
     success: bool
     retry_count: int
-    error_message: Optional[str] = None
+    error_message: str | None = None
     results_count: int = 0
-    error_category: Optional[str] = None  # Added for error categorization
+    error_category: str | None = None  # Added for error categorization
     warning_count: int = 0  # Added for warning tracking
 
     @property
@@ -32,7 +32,7 @@ class PageMetrics:
         """Calculate the duration of the page processing."""
         return self.end_time - self.start_time
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         result = {
             "page_number": self.page_number,
@@ -64,7 +64,7 @@ class RequestMetrics:
     pages_failed: int
     concurrent_level: int
     browser_contexts_used: int
-    page_metrics: List[PageMetrics] = field(default_factory=list)
+    page_metrics: list[PageMetrics] = field(default_factory=list)
 
     @property
     def success_rate(self) -> float:
@@ -73,7 +73,7 @@ class RequestMetrics:
             return 0.0
         return (self.pages_successful / self.pages_requested) * 100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         page_times = [pm.duration for pm in self.page_metrics if pm.success]
 
@@ -97,8 +97,8 @@ class PerformanceTracker:
     """Utility class for tracking performance metrics during operations."""
 
     def __init__(self):
-        self.start_time: Optional[float] = None
-        self.page_metrics: List[PageMetrics] = []
+        self.start_time: float | None = None
+        self.page_metrics: list[PageMetrics] = []
         self.concurrent_level: int = 0
         self.browser_contexts_used: int = 0
 
@@ -158,7 +158,7 @@ async def track_page_performance(page_number: int, url: str):
             self.start_time = time.time()
             self.results_count = 0
             self.retry_count = 0
-            self.error_message: Optional[str] = None
+            self.error_message: str | None = None
             self.success = True
 
         def set_results_count(self, count: int):
@@ -199,8 +199,8 @@ class MetricsAggregator:
 
     @staticmethod
     def calculate_percentiles(
-        values: List[float], percentiles: List[int] = None
-    ) -> Dict[str, float]:
+        values: list[float], percentiles: list[int] | None = None
+    ) -> dict[str, float]:
         """
         Calculate percentiles for a list of values.
 
@@ -248,7 +248,7 @@ class MetricsAggregator:
         return {k: round(v, 3) for k, v in result.items()}
 
     @staticmethod
-    def analyze_request_metrics(metrics_list: List[RequestMetrics]) -> Dict[str, Any]:
+    def analyze_request_metrics(metrics_list: list[RequestMetrics]) -> dict[str, Any]:
         """
         Analyze multiple request metrics to provide aggregate insights.
 
@@ -313,7 +313,7 @@ class MetricsAggregator:
         return analysis
 
     @staticmethod
-    def generate_performance_summary(request_metrics: RequestMetrics) -> Dict[str, Any]:
+    def generate_performance_summary(request_metrics: RequestMetrics) -> dict[str, Any]:
         """
         Generate a human-readable performance summary for a single request.
 

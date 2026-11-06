@@ -1,16 +1,18 @@
-from fastapi import HTTPException
-from libs.websites import kleinanzeigen as lib
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from fastapi import HTTPException
+
+from libs.websites import kleinanzeigen as lib
 from utils.browser import OptimizedPlaywrightManager
-from utils.performance import PageMetrics
 from utils.error_handling import (
-    WarningManager,
     ErrorLogger,
     ErrorSeverity,
+    WarningManager,
     error_handling_context,
 )
+from utils.performance import PageMetrics
 
 _AD_URL_PREFIX = "https://www.kleinanzeigen.de/s-anzeige/"
 
@@ -18,7 +20,7 @@ _AD_URL_PREFIX = "https://www.kleinanzeigen.de/s-anzeige/"
 def _deleted_response(url_requested: str, url_redirected: str) -> dict:
     return {
         "id": None,
-        "scraped_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "scraped_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "url_requested": url_requested,
         "url_redirected": url_redirected,
         "not_found": True,
@@ -140,7 +142,7 @@ async def get_inserate_details(url: str, page):
 
         return {
             "id": ad_id,
-            "scraped_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "scraped_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "url_requested": url,
             "url_redirected": final_url,
             "categories": categories,
@@ -163,7 +165,7 @@ async def get_inserate_details(url: str, page):
             "extra_info": extra_info,
         }
     except Exception as e:
-        print(f"[ERROR] {str(e)}")
+        print(f"[ERROR] {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -171,8 +173,8 @@ async def get_inserate_details_optimized(
     browser_manager: OptimizedPlaywrightManager,
     listing_id: str,
     retry_count: int = 2,
-    request_id: str = None,
-    progress: str = None,
+    request_id: str | None = None,
+    progress: str | None = None,
 ) -> dict:
     """
     Optimized version of get_inserate_details with comprehensive error handling and performance tracking.

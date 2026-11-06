@@ -10,11 +10,13 @@ It also validates related performance requirements:
 """
 
 import asyncio
-import time
 import statistics
-import aiohttp
-from typing import Dict, Any
+import sys
+import time
 from dataclasses import dataclass
+from typing import Any
+
+import aiohttp
 
 
 @dataclass
@@ -25,7 +27,7 @@ class PerformanceTestResult:
     success: bool
     response_time: float
     requirement_met: bool
-    response_data: Dict[str, Any]
+    response_data: dict[str, Any]
     error_message: str = None
 
 
@@ -48,7 +50,7 @@ class PerformanceValidator:
         if self.session:
             await self.session.close()
 
-    async def validate_20_page_requirement(self, iterations: int = 5) -> Dict[str, Any]:
+    async def validate_20_page_requirement(self, iterations: int = 5) -> dict[str, Any]:
         """
         Validate that 20-page requests complete in under 3 seconds.
 
@@ -110,7 +112,7 @@ class PerformanceValidator:
                     error_message=str(e),
                 )
                 results.append(result)
-                print(f"ERROR: {str(e)}")
+                print(f"ERROR: {e!s}")
 
         # Analyze results
         successful_results = [r for r in results if r.success]
@@ -155,7 +157,7 @@ class PerformanceValidator:
             "results": results,
         }
 
-    async def validate_concurrent_performance(self) -> Dict[str, Any]:
+    async def validate_concurrent_performance(self) -> dict[str, Any]:
         """
         Validate that system remains responsive under concurrent load.
 
@@ -267,7 +269,7 @@ class PerformanceValidator:
             "successful_requests": len(successful_results),
         }
 
-    async def validate_performance_metrics_accuracy(self) -> Dict[str, Any]:
+    async def validate_performance_metrics_accuracy(self) -> dict[str, Any]:
         """
         Validate that performance metrics in API responses are accurate and comprehensive.
 
@@ -440,4 +442,4 @@ async def run_performance_validation():
 if __name__ == "__main__":
     # Run performance validation
     success = asyncio.run(run_performance_validation())
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

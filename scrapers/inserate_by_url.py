@@ -9,15 +9,15 @@ import logging
 import math
 import re
 from datetime import datetime
-from typing import Dict, Any, Optional, Tuple
+from typing import Any
 
+from scrapers.inserate_ultra_optimized import (
+    _filter_by_min_publish_date,
+    _page_has_old_listings,
+    create_ultra_optimized_scraper,
+)
 from utils.browser import OptimizedPlaywrightManager
 from utils.performance import PerformanceTracker
-from scrapers.inserate_ultra_optimized import (
-    create_ultra_optimized_scraper,
-    _page_has_old_listings,
-    _filter_by_min_publish_date,
-)
 
 _TOTAL_RESULTS_SELECTOR = {"breadcrump_summary": ".breadcrump-summary"}
 
@@ -32,7 +32,7 @@ def inject_page(url: str, page_num: int) -> str:
       /s-autos/anzeige:angebote/preis::15000/seite:2/c216+...
     Generic search URLs (no filter segment): s-seite:N appended before the query string.
     """
-    from urllib.parse import urlparse, urlunparse, unquote
+    from urllib.parse import unquote, urlparse, urlunparse
 
     parsed = urlparse(url)
     path = unquote(parsed.path)
@@ -60,7 +60,7 @@ def inject_page(url: str, page_num: int) -> str:
     return urlunparse(parsed._replace(path=new_path))
 
 
-def _parse_breadcrumb(breadcrump_text: str) -> Tuple[Optional[int], Optional[int]]:
+def _parse_breadcrumb(breadcrump_text: str) -> tuple[int | None, int | None]:
     """Parse the breadcrumb summary into (total_results, actual_page_count).
 
     Kleinanzeigen renders e.g. 'Autos 1 - 25 von 48 Gebrauchtwagen...'
@@ -87,8 +87,8 @@ async def scrape_by_url(
     browser_manager: OptimizedPlaywrightManager,
     base_url: str,
     max_pages: int = 1,
-    min_publish_date: datetime = None,
-) -> Dict[str, Any]:
+    min_publish_date: datetime | None = None,
+) -> dict[str, Any]:
     """Scrape up to max_pages pages starting from base_url.
 
     If min_publish_date is set, stops fetching once a page contains listings
@@ -102,8 +102,8 @@ async def scrape_by_url(
         batch_size = min(8, max_pages)
         all_results = []
         all_metrics = []
-        total_results: Optional[int] = None
-        actual_max_pages: Optional[int] = None
+        total_results: int | None = None
+        actual_max_pages: int | None = None
         _log = logging.getLogger("scrape_by_url")
 
         # Fetch pages sequentially — Kleinanzeigen blocks concurrent requests

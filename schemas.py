@@ -6,13 +6,13 @@ a field a route emits. Routes set response_model_exclude_unset=True so optional
 keys that are absent at runtime stay absent instead of appearing as null.
 """
 
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 # Metrics are computed as floats but some code paths emit literal ints (e.g. 100).
-# Union keeps the emitted JSON type unchanged instead of coercing 100 -> 100.0.
-Num = Union[int, float]
+# The union keeps the emitted JSON type unchanged instead of coercing 100 -> 100.0.
+Num = int | float
 
 
 class _Model(BaseModel):
@@ -73,35 +73,35 @@ class Media(_Model):
 
 
 class Seller(_Model):
-    name: Optional[str] = None
-    user_id: Optional[str] = None
-    since: Optional[str] = None
+    name: str | None = None
+    user_id: str | None = None
+    since: str | None = None
     type: Literal["private", "business"]
     badges: list[str]
 
 
 class ExtraInfo(_Model):
-    created_at: Optional[str] = None
+    created_at: str | None = None
     views: str
 
 
 class ListingDetail(_Model):
-    id: Optional[str] = Field(description="Ad ID")
+    id: str | None = Field(description="Ad ID")
     scraped_at: str = Field(description="UTC timestamp, ISO 8601 (seconds precision)")
     url_requested: str
     url_redirected: str
     categories: list[str]
-    title: Optional[str]
+    title: str | None
     status: Literal["active", "sold", "reserved", "deleted"]
     price: Price
-    delivery: Optional[Literal["pickup", "shipping"]] = None
+    delivery: Literal["pickup", "shipping"] | None = None
     location: Location
     media: Media
     details: dict[str, str] = Field(description="Label/value pairs from the ad")
-    features: Union[list[str], dict[str, Any]] = Field(
+    features: list[str] | dict[str, Any] = Field(
         description="Feature labels; an empty object when the ad has no feature section"
     )
-    description: Optional[str]
+    description: str | None
     seller: Seller
     extra_info: ExtraInfo
 
@@ -115,7 +115,7 @@ class ListingDetailResponse(_Model):
     success: bool
     time_taken: Num
     data: ListingDetail
-    performance_metrics: Optional[DetailPerformanceMetrics] = None
+    performance_metrics: DetailPerformanceMetrics | None = None
 
 
 # ── Search results ───────────────────────────────────────────────────────────
@@ -125,10 +125,12 @@ class ListingCard(_Model):
     adid: str
     url: str
     title: str
-    price: str = Field(description="Price with '€', 'VB' and '.' removed; '' when absent")
+    price: str = Field(
+        description="Price with '€', 'VB' and '.' removed; '' when absent"
+    )
     location: str
     description: str
-    published_at: Optional[str] = Field(
+    published_at: str | None = Field(
         None, description="ISO 8601 datetime; null when the card shows no date"
     )
     is_top_ad: bool
@@ -147,17 +149,17 @@ class SearchResponse(_Model):
     unique_results: int
     time_taken: Num
     performance_metrics: SearchPerformanceMetrics
-    browser_metrics: Optional[dict[str, Any]] = Field(
+    browser_metrics: dict[str, Any] | None = Field(
         None, description="Browser pool counters"
     )
-    total_results: Optional[int] = Field(
+    total_results: int | None = Field(
         None,
         description="Total hits from the page breadcrumb; only set when it could be parsed",
     )
-    warnings: Optional[list[str]] = Field(
+    warnings: list[str] | None = Field(
         None, description="User-facing warnings; only set when there are any"
     )
-    warning_summary: Optional[dict[str, Any]] = Field(
+    warning_summary: dict[str, Any] | None = Field(
         None, description="Warning counts by severity; only set when there are warnings"
     )
 
@@ -171,8 +173,8 @@ class DetailedSearchPerformanceMetrics(_Model):
     listings_found: int
     details_fetched: int
     success_rate: Num
-    listing_phase_time: Optional[Num] = None
-    detail_phase_time: Optional[Num] = None
+    listing_phase_time: Num | None = None
+    detail_phase_time: Num | None = None
 
 
 class DetailedSearchResponse(_Model):
@@ -193,7 +195,7 @@ class BatchResponse(_Model):
     successful: int
     failed: int
     results: list[ListingDetail]
-    errors: Optional[list[str]] = Field(
+    errors: list[str] | None = Field(
         None, description="'<id>: <reason>' per failed ID; omitted when none failed"
     )
 
@@ -202,22 +204,22 @@ class BatchResponse(_Model):
 
 
 class InserateParams(_Model):
-    query: Optional[str] = None
-    location: Optional[str] = None
-    radius: Optional[int] = None
-    min_price: Optional[int] = None
-    max_price: Optional[int] = None
+    query: str | None = None
+    location: str | None = None
+    radius: int | None = None
+    min_price: int | None = None
+    max_price: int | None = None
     page_count: int
 
 
 class UnmappedParams(_Model):
-    category_slug: Optional[str] = None
-    subcategory: Optional[str] = None
-    category_id: Optional[int] = None
-    art: Optional[str] = None
-    year_from: Optional[int] = None
-    year_to: Optional[int] = None
-    brands: Optional[list[str]] = None
+    category_slug: str | None = None
+    subcategory: str | None = None
+    category_id: int | None = None
+    art: str | None = None
+    year_from: int | None = None
+    year_to: int | None = None
+    brands: list[str] | None = None
 
 
 class ConvertUrlResponse(_Model):
