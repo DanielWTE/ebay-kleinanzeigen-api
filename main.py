@@ -15,6 +15,7 @@ from routers import (
 from routers import (
     inserate_ultra as inserate,
 )
+from schemas import RootResponse
 from utils.asyncio_optimizations import EventLoopOptimizer
 from utils.browser import OptimizedPlaywrightManager
 
@@ -61,7 +62,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(version="1.0.0", lifespan=lifespan)
 
 
-@app.get("/")
+@app.get("/", response_model=RootResponse)
 async def root():
     return {
         "message": "Welcome to the Kleinanzeigen API",

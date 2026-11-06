@@ -6,12 +6,21 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
+from schemas import ErrorResponse, SearchResponse
 from scrapers.inserate_ultra_optimized import ultra_optimized_scrape_inserate
 
 router = APIRouter()
 
 
-@router.get("/inserate")
+@router.get(
+    "/inserate",
+    response_model=SearchResponse,
+    response_model_exclude_unset=True,
+    responses={
+        500: {"model": ErrorResponse, "description": "Scrape failed"},
+        503: {"model": ErrorResponse, "description": "Browser manager not initialized"},
+    },
+)
 async def get_inserate_ultra_optimized(
     request: Request,
     query: str = Query(None, description="Search query string"),

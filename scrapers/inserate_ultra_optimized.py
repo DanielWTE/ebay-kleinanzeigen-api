@@ -9,6 +9,7 @@ import asyncio
 import gc
 import json
 import random
+import re
 import time
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -144,6 +145,22 @@ def _clean_location_text(text: str) -> str:
             value = value[len(bad) :].strip(" :-|•")
 
     return value.strip()
+
+
+_DISTANCE_RE = re.compile(r"\s*\((\d+(?:[.,]\d+)?)\s*km\)\s*$")
+
+
+def _split_location_distance(text: str) -> tuple[str, float | None]:
+    """Split a trailing '(N km)' distance off a cleaned location string.
+
+    Accepts integer and decimal distances ('(12 km)', '(12,5 km)').
+    Returns (location, distance_km); distance_km is None when absent.
+    """
+    match = _DISTANCE_RE.search(text)
+    if not match:
+        return text, None
+    distance = float(match.group(1).replace(",", "."))
+    return text[: match.start()].strip(), distance
 
 
 class UltraOptimizedScraper:
@@ -303,9 +320,13 @@ class UltraOptimizedScraper:
                         .map(line => line.trim())
                         .filter(Boolean);
 
-                    const zipLine = lines.find(line => /\\b\\d{5}\\b/.test(line));
-                    if (zipLine) {
-                        return zipLine;
+                    const zipIdx = lines.findIndex(line => /\\b\\d{5}\\b/.test(line));
+                    if (zipIdx !== -1) {
+                        let loc = lines[zipIdx];
+                        if (zipIdx + 1 < lines.length && /^\\(\\d+(?:[.,]\\d+)?\\s*km\\)$/.test(lines[zipIdx + 1])) {
+                            loc += " " + lines[zipIdx + 1];
+                        }
+                        return loc;
                     }
 
                     return "";
@@ -369,8 +390,10 @@ class UltraOptimizedScraper:
                     sorting_date if isinstance(sorting_date, str) else ""
                 )
 
-            location_text = _clean_location_text(
-                location_raw if isinstance(location_raw, str) else ""
+            location_text, distance_km = _split_location_distance(
+                _clean_location_text(
+                    location_raw if isinstance(location_raw, str) else ""
+                )
             )
 
             return {
@@ -379,6 +402,7 @@ class UltraOptimizedScraper:
                 "title": title_text if isinstance(title_text, str) else "",
                 "price": price_text,
                 "location": location_text,
+                "distance_km": distance_km,
                 "description": description_text
                 if isinstance(description_text, str)
                 else "",
@@ -410,7 +434,7 @@ class UltraOptimizedScraper:
         url: str,
         page_num: int,
         retry_count: int = 2,
-        extra_selectors: dict[str, str] | None = None,
+        extra_selectors: dict[str, str] = None,
     ) -> tuple[list[dict], PageMetrics, dict[str, str]]:
         """
         Ultra-optimized page fetching with all performance enhancements.
@@ -529,13 +553,13 @@ class UltraOptimizedScraper:
 
     async def ultra_optimized_scrape(
         self,
-        query: str | None = None,
-        location: str | None = None,
-        radius: int | None = None,
-        min_price: int | None = None,
-        max_price: int | None = None,
+        query: str = None,
+        location: str = None,
+        radius: int = None,
+        min_price: int = None,
+        max_price: int = None,
         page_count: int = 1,
-        min_publish_date: datetime | None = None,
+        min_publish_date: datetime = None,
     ) -> dict[str, Any]:
         """
         Ultra-optimized multi-page scraping with all performance enhancements.
@@ -734,13 +758,13 @@ async def create_ultra_optimized_scraper(
 # Convenience function for direct usage
 async def ultra_optimized_scrape_inserate(
     browser_manager: OptimizedPlaywrightManager,
-    query: str | None = None,
-    location: str | None = None,
-    radius: int | None = None,
-    min_price: int | None = None,
-    max_price: int | None = None,
+    query: str = None,
+    location: str = None,
+    radius: int = None,
+    min_price: int = None,
+    max_price: int = None,
     page_count: int = 1,
-    min_publish_date: datetime | None = None,
+    min_publish_date: datetime = None,
 ) -> dict[str, Any]:
     """
     Direct function for ultra-optimized scraping.

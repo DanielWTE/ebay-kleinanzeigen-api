@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from schemas import BatchResponse, ErrorResponse
 from scrapers.inserat import get_inserate_details_optimized
 
 router = APIRouter()
@@ -14,7 +15,15 @@ class InsérateBatchRequest(BaseModel):
     max_concurrent: int = 1
 
 
-@router.post("/inserate/batch")
+@router.post(
+    "/inserate/batch",
+    response_model=BatchResponse,
+    response_model_exclude_unset=True,
+    responses={
+        400: {"model": ErrorResponse, "description": "No valid listing IDs provided"},
+        503: {"model": ErrorResponse, "description": "Browser manager not initialized"},
+    },
+)
 async def get_inserate_batch(request: Request, body: InsérateBatchRequest):
     """
     Fetch detailed information for a list of listing IDs in a single request.
