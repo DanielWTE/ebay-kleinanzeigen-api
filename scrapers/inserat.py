@@ -36,7 +36,7 @@ def _deleted_response(url_requested: str, url_redirected: str) -> dict:
             "audios": {"count": 0, "urls": []},
         },
         "details": {},
-        "features": {},
+        "features": [],
         "description": None,
         "seller": {
             "name": None,

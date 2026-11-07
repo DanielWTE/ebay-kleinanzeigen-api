@@ -121,7 +121,7 @@ class ListingDetail(_Model):
     location: Location
     media: Media
     details: dict[str, str] = Field(description="Label/value pairs from the ad")
-    features: list[str] | dict[str, Any] = Field(
+    features: list[str] = Field(
         description="Feature labels; an empty list when the ad has no feature section"
     )
     description: str | None
