@@ -357,7 +357,8 @@ curl -s -X POST http://localhost:8000/inserate-by-url \
       "price": "12500",
       "description": "Gepflegter Zustand, Erstbesitz...",
       "published_at": "2026-05-03T22:06:00",
-      "is_top_ad": false
+      "is_top_ad": false,
+      "distance_km": 12.5
     }
   ],
   "unique_results": 75,
@@ -388,6 +389,8 @@ curl -s -X POST http://localhost:8000/inserate-by-url \
   - `description` — Short teaser text from the listing card
   - `published_at` — ISO 8601 publish datetime (e.g. `"2026-05-03T22:06:00"`). Older listings show only the date at midnight (`"2026-04-26T00:00:00"`). Top ads hide the date on their card; it is then taken from the page's embedded listing data. `null` only if neither source has a date.
   - `is_top_ad` — `true` for paid "TOP" listings pinned above the date-sorted results. They are ignored when `min_publish_date` decides whether to stop paging.
+  - `location` — Cleaned location text (zip/city); a trailing `(N km)` distance is stripped into `distance_km`.
+  - `distance_km` — Distance in kilometres when the card shows one as `(N km)` or `(N,5 km)`; `null` otherwise.
 - **`unique_results`**: Total number of listings returned across all fetched pages.
 - **`total_results`**: Total hits reported by Kleinanzeigen for this search (e.g. `120140`). Extracted from the page breadcrumb on the first page load — no extra request needed.
 - **`time_taken`**: Total elapsed time in seconds.
@@ -495,7 +498,8 @@ The `/inserate-detailed` response additionally nests a `details` object inside e
       "title": "Example Item",
       "price": "100",
       "description": "Short teaser text...",
-      "published_at": "2026-05-03T22:06:00"
+      "published_at": "2026-05-03T22:06:00",
+      "distance_km": null
     }
   ],
   "unique_results": 75,
