@@ -8,16 +8,23 @@ from routers import (
     inserat,
     inserate_batch,
     inserate_by_url,
-)
-from routers import (
-    inserate_detailed_ultra as inserate_detailed,
-)
-from routers import (
-    inserate_ultra as inserate,
+    inserate_detailed_ultra,
+    inserate_ultra,
 )
 from schemas import RootResponse
 from utils.asyncio_optimizations import EventLoopOptimizer
 from utils.browser import OptimizedPlaywrightManager
+
+# Single source of truth for the public API routers: used both to register
+# routes and to advertise them in the root response.
+_ROUTER_MODULES = (
+    inserate_ultra,
+    inserat,
+    inserate_detailed_ultra,
+    inserate_batch,
+    convert_url,
+    inserate_by_url,
+)
 
 # Global browser manager instance for sharing across all endpoints
 browser_manager = None
@@ -67,20 +74,11 @@ async def root():
     return {
         "message": "Welcome to the Kleinanzeigen API",
         "endpoints": [
-            "/inserate",
-            "/inserat/{id}",
-            "/inserate-detailed",
-            "/inserate/batch",
-            "/convert-url",
-            "/inserate-by-url",
+            route.path for module in _ROUTER_MODULES for route in module.router.routes
         ],
         "status": "operational",
     }
 
 
-app.include_router(inserate.router)
-app.include_router(inserat.router)
-app.include_router(inserate_detailed.router)
-app.include_router(inserate_batch.router)
-app.include_router(convert_url.router)
-app.include_router(inserate_by_url.router)
+for _module in _ROUTER_MODULES:
+    app.include_router(_module.router)
