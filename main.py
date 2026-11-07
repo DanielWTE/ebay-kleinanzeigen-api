@@ -66,7 +66,14 @@ app = FastAPI(version="1.0.0", lifespan=lifespan)
 async def root():
     return {
         "message": "Welcome to the Kleinanzeigen API",
-        "endpoints": ["/inserate", "/inserat/{id}", "/inserate-detailed"],
+        "endpoints": [
+            "/inserate",
+            "/inserat/{id}",
+            "/inserate-detailed",
+            "/inserate/batch",
+            "/convert-url",
+            "/inserate-by-url",
+        ],
         "status": "operational",
     }
 
