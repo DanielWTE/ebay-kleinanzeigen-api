@@ -8,9 +8,11 @@ dependencies = [
     "aiohttp>=3.12.15",
     "fastapi>=0.115.6",
     "httpx>=0.28.1",
+    "httpx2>=2.16.0",
     "loguru>=0.7.3",
     "playwright>=1.49.0",
     "python-multipart>=0.0.20",
+    "starlette>=1.10",
     "uvicorn>=0.34.0",
     "uvloop>=0.21.0",
 ]
@@ -36,7 +38,6 @@ ignore = [
 
 [tool.pytest.ini_options]
 pythonpath = ['.']
-import_mode = 'importlib'
 asyncio_mode = 'auto'
 addopts = '-m "not integration"'
 markers = ['integration: requires a running API server on localhost:8000; run with -m integration']
