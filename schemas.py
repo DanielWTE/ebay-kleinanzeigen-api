@@ -35,6 +35,29 @@ class ListingNotFoundResponse(_Model):
     detail: ListingNotFoundDetail
 
 
+class ScrapeErrorDetail(_Model):
+    """Structured error detail returned when a listing fetch fails."""
+
+    error: str = Field(description="Human-readable error message")
+    category: str = Field(
+        description="Error category (network, browser, resource, parsing, validation)"
+    )
+    severity: str = Field(description="Error severity (low, medium, high, critical)")
+    recovery_suggestions: list[str] = Field(
+        description="Suggested recovery steps; empty when none"
+    )
+
+
+class ScrapeErrorResponse(_Model):
+    """500 body for listing detail endpoints.
+
+    `detail` is a plain string for generic failures, or a ScrapeErrorDetail
+    object when the scraper classifies the failure.
+    """
+
+    detail: str | ScrapeErrorDetail
+
+
 # ── Root ─────────────────────────────────────────────────────────────────────
 
 
@@ -99,7 +122,7 @@ class ListingDetail(_Model):
     media: Media
     details: dict[str, str] = Field(description="Label/value pairs from the ad")
     features: list[str] | dict[str, Any] = Field(
-        description="Feature labels; an empty object when the ad has no feature section"
+        description="Feature labels; an empty list when the ad has no feature section"
     )
     description: str | None
     seller: Seller
@@ -134,6 +157,10 @@ class ListingCard(_Model):
         None, description="ISO 8601 datetime; null when the card shows no date"
     )
     is_top_ad: bool
+    distance_km: float | None = Field(
+        None,
+        description="Distance in km parsed from a trailing '(N km)' on the location; null when absent",
+    )
 
 
 class SearchPerformanceMetrics(_Model):
@@ -220,6 +247,10 @@ class UnmappedParams(_Model):
     year_from: int | None = None
     year_to: int | None = None
     brands: list[str] | None = None
+    unknown_attrs: dict[str, str] | None = Field(
+        None,
+        description="Unrecognized Kleinanzeigen filter attributes kept verbatim (key -> value)",
+    )
 
 
 class ConvertUrlResponse(_Model):
