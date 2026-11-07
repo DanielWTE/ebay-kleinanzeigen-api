@@ -19,6 +19,9 @@ Kleinanzeigen the deleted-ad tests will need a new ID.
 import httpx
 import pytest
 
+pytestmark = pytest.mark.integration
+
+
 BASE_URL = "http://localhost:8000"
 
 SEARCH_URL = (

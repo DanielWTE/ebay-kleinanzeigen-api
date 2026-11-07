@@ -1,3 +1,28 @@
+# Tests
+
+## Unit / schema tests (pytest)
+
+Hermetic tests that need no running server. Run from the repo root:
+
+```bash
+# All unit tests (integration-marked tests are deselected by default)
+pytest
+
+# Response-schema suite only: drives every route through FastAPI's
+# TestClient with scrapers stubbed, validating output against schemas.py
+pytest tests/test_response_schema.py -v
+
+# Live tests (require `uvicorn main:app` running on localhost:8000)
+pytest -m integration
+```
+
+`tests/test_response_schema.py` checks two things per route: the real
+`response_model` validation (a shape mismatch surfaces as HTTP 500), and a
+drift check that fails if a route emits keys not declared in `schemas.py`
+(`extra="allow"` would otherwise let them through silently).
+
+The sections below cover the load-testing framework.
+
 # Load Testing Framework
 
 This directory contains a comprehensive load testing framework for validating the Kleinanzeigen API performance optimizations. The framework simulates multiple concurrent users making API requests and provides detailed performance analysis.

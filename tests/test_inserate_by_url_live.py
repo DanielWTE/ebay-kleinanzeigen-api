@@ -19,6 +19,9 @@ from datetime import datetime
 import httpx
 import pytest
 
+pytestmark = pytest.mark.integration
+
+
 BASE_URL = "http://localhost:8000"
 
 # URL with 100k+ results — reliable target for pagination tests
