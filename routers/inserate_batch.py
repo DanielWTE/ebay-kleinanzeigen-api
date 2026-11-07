@@ -10,7 +10,7 @@ from scrapers.inserat import get_inserate_details_optimized
 router = APIRouter()
 
 
-class InsérateBatchRequest(BaseModel):
+class InserateBatchRequest(BaseModel):
     ids: list[str]
     max_concurrent: int = 1
 
@@ -24,7 +24,7 @@ class InsérateBatchRequest(BaseModel):
         503: {"model": ErrorResponse, "description": "Browser manager not initialized"},
     },
 )
-async def get_inserate_batch(request: Request, body: InsérateBatchRequest):
+async def get_inserate_batch(request: Request, body: InserateBatchRequest):
     """
     Fetch detailed information for a list of listing IDs in a single request.
 
