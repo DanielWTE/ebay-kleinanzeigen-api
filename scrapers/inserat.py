@@ -124,7 +124,7 @@ async def get_inserate_details(url: str, page):
         features = (
             await lib.get_features(page)
             if await page.query_selector("#viewad-configuration")
-            else {}
+            else []
         )
 
         shipping_text = await lib.get_element_content(
