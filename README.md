@@ -8,7 +8,17 @@
   </p>
 
   <p align="center">
+    <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api"><img src="https://img.shields.io/github/stars/DanielWTE/ebay-kleinanzeigen-api" alt="GitHub stars"></a>
+    <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/issues"><img src="https://img.shields.io/github/issues/DanielWTE/ebay-kleinanzeigen-api" alt="Open issues"></a>
+    <a href="https://github.com/DanielWTE/ebay-kleinanzeigen-api/pulls"><img src="https://img.shields.io/github/issues-pr/DanielWTE/ebay-kleinanzeigen-api" alt="Open pull requests"></a>
+    <br />
     <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.14+-blue" alt="Python 3.14+"></a>
+    <br />
+    <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688" alt="FastAPI"></a>
+    <a href="https://playwright.dev/python/"><img src="https://img.shields.io/badge/Playwright-1.49+-2EAD33" alt="Playwright"></a>
+    <a href="https://github.com/astral-sh/uv"><img src="https://img.shields.io/badge/package%20manager-uv-261230" alt="uv"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
   </p>
   <p align="center">
     <b>🚀 Looking for a ready-to-use solution?</b>
