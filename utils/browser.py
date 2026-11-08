@@ -11,9 +11,15 @@ from utils.user_agent import get_random_ua
 CDP_URL = os.environ.get("BROWSER_CDP_URL", "").strip() or None
 
 # Resource types that never affect extraction: the scraper reads the DOM via
-# query_selector/evaluate/inner_text only, so stylesheets, images, media and
-# fonts can be aborted before they cost bandwidth and CPU.
-BLOCKED_RESOURCE_TYPES = {"image", "media", "font", "stylesheet"}
+# query_selector/evaluate/inner_text only, so images, media and fonts can be
+# aborted before they cost bandwidth and CPU.
+#
+# Stylesheets must NOT be blocked: inner_text() honours CSS visibility, and
+# ad pages carry CSS-hidden markers such as
+# `<span class="pvap-reserved-title is-hidden">Reserviert • </span>` inside
+# #viewad-title. Without CSS those leak into the text and every ad is
+# reported as reserved.
+BLOCKED_RESOURCE_TYPES = {"image", "media", "font"}
 
 # Ad-tech / consent / promo script paths. Kleinanzeigen serves these from
 # first-party URLs, so they can't be caught by domain blocklists. None of

@@ -86,7 +86,7 @@ The API will be available at `http://localhost:8000`
 | Variable | Default | Description |
 |---|---|---|
 | `BROWSER_CDP_URL` | - | Connect to an external browser over CDP (BrowserUse, browserless, `chromium --remote-debugging-port`) instead of launching a local Chromium. |
-| `BROWSER_DISABLE_RESOURCE_BLOCKING` | `0` | Set to `1` to disable request interception. By default the browser aborts image/media/font/stylesheet requests and ad-tech scripts (liberty, GDPR consent, promos, GTM, kameleoon), cutting ~37% of page bytes. Disable only for debugging extraction issues. |
+| `BROWSER_DISABLE_RESOURCE_BLOCKING` | `0` | Set to `1` to disable request interception. By default the browser aborts image/media/font requests and ad-tech scripts (liberty, GDPR consent, promos, GTM, kameleoon), cutting roughly 35–50% of transferred bytes per page. Stylesheets are kept because text extraction depends on CSS visibility. Disable only for debugging extraction issues. |
 
 ### API Endpoints
 
