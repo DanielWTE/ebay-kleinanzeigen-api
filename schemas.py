@@ -183,6 +183,15 @@ class SearchResponse(_Model):
         None,
         description="Total hits from the page breadcrumb; only set when it could be parsed",
     )
+    total_pages: int | None = Field(
+        None,
+        description="Real page count derived from the breadcrumb; null when not derivable (e.g. first fetched page > 1)",
+    )
+    page: int | None = Field(None, description="First page number fetched (1-based)")
+    pages_fetched: int | None = Field(
+        None,
+        description="Number of pages actually requested; less than page_count when fetching stopped early",
+    )
     warnings: list[str] | None = Field(
         None, description="User-facing warnings; only set when there are any"
     )
@@ -210,6 +219,18 @@ class DetailedSearchResponse(_Model):
     unique_results: int
     time_taken: Num
     performance_metrics: DetailedSearchPerformanceMetrics
+    total_results: int | None = Field(
+        None,
+        description="Total hits from the page breadcrumb; only set when it could be parsed",
+    )
+    total_pages: int | None = Field(
+        None,
+        description="Real page count derived from the breadcrumb; null when not derivable",
+    )
+    page: int | None = Field(None, description="First page number fetched (1-based)")
+    pages_fetched: int | None = Field(
+        None, description="Number of pages actually requested"
+    )
 
 
 # ── Batch ────────────────────────────────────────────────────────────────────
@@ -236,7 +257,8 @@ class InserateParams(_Model):
     radius: int | None = None
     min_price: int | None = None
     max_price: int | None = None
-    page_count: int
+    page: int = Field(1, description="First page to fetch (Kleinanzeigen seite:N)")
+    page_count: int = Field(1, description="Number of consecutive pages to fetch")
 
 
 class UnmappedParams(_Model):

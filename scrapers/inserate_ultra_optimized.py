@@ -23,6 +23,7 @@ from utils.asyncio_optimizations import (
     MemoryOptimizedProcessor,
     monitor_slow_coroutines,
 )
+from utils.breadcrumb import TOTAL_RESULTS_SELECTOR, parse_breadcrumb
 from utils.browser import OptimizedPlaywrightManager
 from utils.error_handling import (
     ErrorClassifier,
@@ -55,6 +56,20 @@ def _filter_by_min_publish_date(results: list, min_publish_date: datetime) -> li
         pub = r.get("published_at")
         if pub is None or datetime.fromisoformat(pub) >= min_publish_date:
             out.append(r)
+    return out
+
+
+def _dedupe_by_adid(results: list[dict]) -> list[dict]:
+    """Drop repeat listings — top ads can appear on multiple pages."""
+    seen = set()
+    out = []
+    for r in results:
+        adid = r.get("adid")
+        if adid is not None:
+            if adid in seen:
+                continue
+            seen.add(adid)
+        out.append(r)
     return out
 
 
@@ -552,6 +567,7 @@ class UltraOptimizedScraper:
         radius: int = None,
         min_price: int = None,
         max_price: int = None,
+        page: int = 1,
         page_count: int = 1,
         min_publish_date: datetime = None,
     ) -> dict[str, Any]:
@@ -598,59 +614,106 @@ class UltraOptimizedScraper:
                 + param_string
             )
 
-            # Create page fetch tasks
+            # Create page fetch tasks; the first page also grabs the
+            # breadcrumb so we learn the real result/page count up front.
+            pages_dispatched = 0
+
             async def create_page_task(page_num: int):
+                nonlocal pages_dispatched
+                pages_dispatched += 1
                 url = search_url.format(page=page_num)
-                return await self.ultra_optimized_fetch_page(url, page_num)
+                return await self.ultra_optimized_fetch_page(
+                    url,
+                    page_num,
+                    extra_selectors=(
+                        TOTAL_RESULTS_SELECTOR if page_num == page else None
+                    ),
+                )
 
-            # Use memory-optimized batch processing
-            page_numbers = list(range(1, page_count + 1))
-
-            # Process in optimal batches to balance speed and memory
-            batch_size = min(8, page_count)  # Optimal batch size based on testing
-            all_results = []
-            all_metrics = []
+            page_numbers = list(range(page, page + page_count))
+            all_results: list[dict] = []
+            all_metrics: list[PageMetrics] = []
+            total_results: int | None = None
+            total_pages: int | None = None
             stop_early = False
 
-            for i in range(0, len(page_numbers), batch_size):
+            def _process_page_result(result) -> bool:
+                """Fold one fetch result into the aggregates.
+
+                Returns True when no further pages should be requested.
+                """
+                nonlocal total_results, total_pages
+                if isinstance(result, Exception):
+                    logger.log_error(
+                        ErrorClassifier.classify_exception(
+                            result,
+                            ErrorContext(operation="batch_processing"),
+                            "batch_execution",
+                        )
+                    )
+                    return False
+
+                page_results, page_metrics, extras = result
+
+                if total_results is None and "breadcrump_summary" in extras:
+                    total_results, total_pages = parse_breadcrumb(
+                        extras["breadcrump_summary"]
+                    )
+                    if total_results is not None:
+                        logger.logger.info(
+                            f"[OVERVIEW] breadcrumb: {total_results} results → "
+                            f"{total_pages} page(s) available"
+                        )
+
+                all_metrics.append(page_metrics)
+                tracker.add_page_metric(page_metrics)
+
+                if not page_results:
+                    logger.logger.info(
+                        f"[OVERVIEW] page {page_metrics.page_number} returned no "
+                        "results — stopping early"
+                    )
+                    # Only a successfully loaded empty page means we are past
+                    # the end; a failed fetch says nothing about later pages.
+                    return bool(page_metrics.success)
+
+                if min_publish_date:
+                    stop = _page_has_old_listings(page_results, min_publish_date)
+                    page_results = _filter_by_min_publish_date(
+                        page_results, min_publish_date
+                    )
+                    all_results.extend(page_results)
+                    return stop
+
+                all_results.extend(page_results)
+                return False
+
+            # First page alone: its breadcrumb clamps the remaining range
+            # before we spend requests on pages that don't exist.
+            if page_numbers:
+                stop_early = _process_page_result(
+                    await create_page_task(page_numbers[0])
+                )
+
+            remaining = [
+                p for p in page_numbers[1:] if total_pages is None or p <= total_pages
+            ]
+
+            # Process the rest in batches to balance speed and memory.
+            batch_size = min(8, len(remaining)) or 1
+            for i in range(0, len(remaining), batch_size):
                 if stop_early:
                     break
 
-                batch_pages = page_numbers[i : i + batch_size]
-
-                # Create tasks for this batch
-                batch_tasks = [create_page_task(page_num) for page_num in batch_pages]
-
-                # Execute batch with task manager
+                batch_pages = remaining[i : i + batch_size]
+                batch_tasks = [create_page_task(p) for p in batch_pages]
                 batch_results = await self.task_manager.gather_with_limit(
                     batch_tasks, return_exceptions=True
                 )
 
-                # Process batch results
                 for result in batch_results:
-                    if isinstance(result, Exception):
-                        logger.log_error(
-                            ErrorClassifier.classify_exception(
-                                result,
-                                ErrorContext(operation="batch_processing"),
-                                "batch_execution",
-                            )
-                        )
-                        continue
-
-                    page_results, page_metrics, _ = result
-
-                    if min_publish_date and _page_has_old_listings(
-                        page_results, min_publish_date
-                    ):
-                        page_results = _filter_by_min_publish_date(
-                            page_results, min_publish_date
-                        )
+                    if _process_page_result(result):
                         stop_early = True
-
-                    all_results.extend(page_results)
-                    all_metrics.append(page_metrics)
-                    tracker.add_page_metric(page_metrics)
 
                 # Memory cleanup between batches
                 gc.collect()
@@ -701,11 +764,15 @@ class UltraOptimizedScraper:
                 duration=request_metrics.total_time,
             )
 
+            all_results = _dedupe_by_adid(all_results)
+
             # Prepare ultra-comprehensive response
             response = {
                 "success": True,
                 "results": all_results,
                 "unique_results": len(all_results),
+                "page": page,
+                "pages_fetched": pages_dispatched,
                 "time_taken": round(request_metrics.total_time, 3),
                 "performance_metrics": {
                     **request_metrics.to_dict(),
@@ -725,6 +792,10 @@ class UltraOptimizedScraper:
                     "automatic_gc",
                 ],
             }
+
+            if total_results is not None:
+                response["total_results"] = total_results
+                response["total_pages"] = total_pages
 
             # Add warning information if present
             warnings = warning_manager.get_warnings()
@@ -757,6 +828,7 @@ async def ultra_optimized_scrape_inserate(
     radius: int = None,
     min_price: int = None,
     max_price: int = None,
+    page: int = 1,
     page_count: int = 1,
     min_publish_date: datetime = None,
 ) -> dict[str, Any]:
@@ -779,6 +851,7 @@ async def ultra_optimized_scrape_inserate(
             radius=radius,
             min_price=min_price,
             max_price=max_price,
+            page=page,
             page_count=page_count,
             min_publish_date=min_publish_date,
         )
