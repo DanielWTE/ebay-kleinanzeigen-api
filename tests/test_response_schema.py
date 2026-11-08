@@ -15,6 +15,7 @@ Run with:  pytest tests/test_response_schema.py -v
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 import routers.inserat as inserat_router
 import routers.inserate_batch as batch_router
@@ -150,13 +151,9 @@ def _assert_keys_within_model(payload: dict, model) -> None:
         value = payload[name]
         annotation = field.annotation
         # Unwrap Optional/Union to find a BaseModel member
-        members = getattr(annotation, "__args__", None) or ()
+        members = getattr(annotation, "__args__", None) or (annotation,)
         for member in members:
-            if (
-                isinstance(member, type)
-                and issubclass(member, type)
-                and hasattr(member, "model_fields")
-            ):
+            if isinstance(member, type) and issubclass(member, BaseModel):
                 if isinstance(value, dict):
                     _assert_keys_within_model(value, member)
                 elif isinstance(value, list):

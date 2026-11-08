@@ -8,20 +8,20 @@ dependencies = [
     "aiohttp>=3.12.15",
     "fastapi>=0.115.6",
     "httpx>=0.28.1",
-    "httpx2>=2.16.0",
     "loguru>=0.7.3",
     "playwright>=1.49.0",
     "python-multipart>=0.0.20",
-    "starlette>=1.10",
     "uvicorn>=0.34.0",
     "uvloop>=0.21.0",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.16.0",
     "pre-commit>=4.0.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.4.0",
+    "starlette>=1.10",
 ]
 [tool.ruff.lint]
 ignore = [

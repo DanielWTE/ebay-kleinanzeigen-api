@@ -174,20 +174,20 @@ dependencies = [
     { name = "aiohttp" },
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "httpx2" },
     { name = "loguru" },
     { name = "playwright" },
     { name = "python-multipart" },
-    { name = "starlette" },
     { name = "uvicorn" },
     { name = "uvloop" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "httpx2" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
+    { name = "starlette" },
 ]
 
 [package.metadata]
@@ -195,20 +195,20 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.12.15" },
     { name = "fastapi", specifier = ">=0.115.6" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "httpx2", specifier = ">=2.16.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "playwright", specifier = ">=1.49.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
-    { name = "starlette", specifier = ">=1.10" },
     { name = "uvicorn", specifier = ">=0.34.0" },
     { name = "uvloop", specifier = ">=0.21.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx2", specifier = ">=2.16.0" },
     { name = "pre-commit", specifier = ">=4.0.0" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
+    { name = "starlette", specifier = ">=1.10" },
 ]
 
 [[package]]
