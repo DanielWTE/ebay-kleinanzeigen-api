@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from playwright.async_api import BrowserContext, Page, async_playwright
+from playwright.async_api import BrowserContext, Page, Route, async_playwright
 
 from utils.user_agent import get_random_ua
 
@@ -9,6 +9,55 @@ from utils.user_agent import get_random_ua
 # chromium --remote-debugging-port). When set, the app connects to that
 # browser instead of launching a local bundled Chromium.
 CDP_URL = os.environ.get("BROWSER_CDP_URL", "").strip() or None
+
+# Resource types that never affect extraction: the scraper reads the DOM via
+# query_selector/evaluate/inner_text only, so images, media and fonts can be
+# aborted before they cost bandwidth and CPU.
+#
+# Stylesheets must NOT be blocked: inner_text() honours CSS visibility, and
+# ad pages carry CSS-hidden markers such as
+# `<span class="pvap-reserved-title is-hidden">Reserviert • </span>` inside
+# #viewad-title. Without CSS those leak into the text and every ad is
+# reported as reserved.
+BLOCKED_RESOURCE_TYPES = {"image", "media", "font"}
+
+# Ad-tech / consent / promo script paths. Kleinanzeigen serves these from
+# first-party URLs, so they can't be caught by domain blocklists. None of
+# them contribute to .ad-listitem extraction (listings are SSR'd Astro
+# islands); blocking them removes ~1.4MB of JS per page load.
+BLOCKED_URL_PATTERNS = (
+    "/liberty/",  # ad platform: renderer, prebid, liberty.min.js
+    "/gdpr/",  # consent-management-platform banner
+    "promotion-frontend",  # promo bundle
+    "kameleoon",  # A/B testing
+    "sgtm-legacy",  # Google Tag Manager
+)
+
+
+async def _block_heavy_resources(route: Route):
+    request = route.request
+    url = request.url
+    if request.resource_type in BLOCKED_RESOURCE_TYPES or any(
+        p in url for p in BLOCKED_URL_PATTERNS
+    ):
+        await route.abort()
+    else:
+        await route.continue_()
+
+
+# Set BROWSER_DISABLE_RESOURCE_BLOCKING=1 to turn off request interception
+# entirely (useful for debugging extraction issues or A/B benchmarking).
+# Read at context-creation time so tests and benchmarks can toggle per-run.
+def _resource_blocking_disabled() -> bool:
+    return os.environ.get("BROWSER_DISABLE_RESOURCE_BLOCKING", "").strip() == "1"
+
+
+async def _new_context(browser, user_agent: str) -> BrowserContext:
+    """Create a context with heavy subresources blocked at the routing layer."""
+    context = await browser.new_context(user_agent=user_agent)
+    if not _resource_blocking_disabled():
+        await context.route("**/*", _block_heavy_resources)
+    return context
 
 
 class PlaywrightManager:
@@ -24,7 +73,7 @@ class PlaywrightManager:
             self._browser = await self._playwright.chromium.launch(headless=True)
 
     async def new_context_page(self):
-        context = await self._browser.new_context(user_agent=get_random_ua())
+        context = await _new_context(self._browser, get_random_ua())
         return await context.new_page()
 
     async def close_page(self, page):
@@ -65,7 +114,7 @@ class OptimizedPlaywrightManager:
         initial_contexts = min(3, self._max_contexts)
         if not CDP_URL:  # skip pre-warm against external/ephemeral browsers
             for _ in range(initial_contexts):
-                context = await self._browser.new_context(user_agent=get_random_ua())
+                context = await _new_context(self._browser, get_random_ua())
                 self._context_pool.append(context)
                 self._contexts_created += 1
 
@@ -80,7 +129,7 @@ class OptimizedPlaywrightManager:
 
             # Create new context if pool is empty and under limit
             if len(self._context_in_use) < self._max_contexts:
-                context = await self._browser.new_context(user_agent=get_random_ua())
+                context = await _new_context(self._browser, get_random_ua())
                 self._context_in_use.append(context)
                 self._contexts_created += 1
                 return context
