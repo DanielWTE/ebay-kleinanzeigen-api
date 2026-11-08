@@ -81,6 +81,13 @@ docker run -p 8000:8000 ebay-kleinanzeigen-api
 
 The API will be available at `http://localhost:8000`
 
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `BROWSER_CDP_URL` | - | Connect to an external browser over CDP (BrowserUse, browserless, `chromium --remote-debugging-port`) instead of launching a local Chromium. |
+| `BROWSER_DISABLE_RESOURCE_BLOCKING` | `0` | Set to `1` to disable request interception. By default the browser aborts image/media/font/stylesheet requests and ad-tech scripts (liberty, GDPR consent, promos, GTM, kameleoon), cutting ~37% of page bytes. Disable only for debugging extraction issues. |
+
 ### API Endpoints
 
 #### 1. Fetch Listings (Standard)

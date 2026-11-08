@@ -466,14 +466,8 @@ class UltraOptimizedScraper:
                     # Optimized page loading with minimal wait
                     await page.goto(url, timeout=60000, wait_until="domcontentloaded")
 
-                    # Wait for essential content only
-                    try:
-                        await page.wait_for_selector(
-                            ".ad-listitem", timeout=5000, state="visible"
-                        )
-                    except Exception:
-                        # Continue even if selector not found - might be empty page
-                        pass
+                    # Listings are server-rendered in the HTML, so they are
+                    # already in the DOM at domcontentloaded; no extra wait.
 
                     # Extract ads with optimized method
                     results = await self.extract_ads_optimized(page)
