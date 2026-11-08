@@ -35,7 +35,10 @@ async def get_inserate_with_details(
     radius: int = Query(None, description="Search radius in kilometers"),
     min_price: int = Query(None, description="Minimum price filter"),
     max_price: int = Query(None, description="Maximum price filter"),
-    page_count: int = Query(1, ge=1, le=3, description="Number of pages to fetch"),
+    page: int = Query(1, ge=1, description="First page to fetch"),
+    page_count: int = Query(
+        1, ge=1, le=3, description="Number of consecutive pages to fetch"
+    ),
     max_concurrent_details: int = Query(
         5, ge=1, le=10, description="Maximum concurrent detail fetches"
     ),
@@ -62,6 +65,7 @@ async def get_inserate_with_details(
             radius=radius,
             min_price=min_price,
             max_price=max_price,
+            page=page,
             page_count=page_count,
         )
 
@@ -70,7 +74,7 @@ async def get_inserate_with_details(
 
         listings = listings_result.get("results", [])
         if not listings:
-            return {
+            response = {
                 "success": True,
                 "data": [],
                 "unique_results": 0,
@@ -81,6 +85,10 @@ async def get_inserate_with_details(
                     "success_rate": 100,
                 },
             }
+            for key in ("total_results", "total_pages", "page", "pages_fetched"):
+                if key in listings_result:
+                    response[key] = listings_result[key]
+            return response
 
         # Phase 2: Fetch details concurrently with controlled concurrency
         detail_request_id = f"req-{uuid.uuid4().hex[:8]}"
@@ -157,6 +165,10 @@ async def get_inserate_with_details(
                 ),
             },
         }
+
+        for key in ("total_results", "total_pages", "page", "pages_fetched"):
+            if key in listings_result:
+                response[key] = listings_result[key]
 
         return response
 

@@ -129,7 +129,10 @@ def map_to_inserate_params(parsed: dict) -> tuple[dict, dict]:
         if key in parsed:
             inserate_params[key] = parsed[key]
 
-    inserate_params["page_count"] = parsed.get("page", 1)
+    # seite:N maps to the first page to fetch; page_count stays 1 so we
+    # fetch that single page instead of pages 1..N.
+    inserate_params["page"] = parsed.get("page", 1)
+    inserate_params["page_count"] = 1
 
     unmapped = {k: v for k, v in parsed.items() if k not in _MAPPED_SOURCE_KEYS}
 

@@ -113,7 +113,8 @@ The API will be available at `http://localhost:8000`
 - **`radius`** *(integer, optional)*: The search radius in kilometers from the specified location (e.g., `5` for a 5 km radius).
 - **`min_price`** *(integer, optional)*: The minimum price in Euros for the listings (e.g., `200` for at least 200 Euros).
 - **`max_price`** *(integer, optional)*: The maximum price in Euros for the listings (e.g., `500` for at most 500 Euros).
-- **`page_count`** *(integer, optional)*: The number of pages to search or return (e.g., `5` for the first 5 pages, default is 1, max: 20 pages).
+- **`page`** *(integer, optional)*: The first page to fetch (default 1). `page=5&page_count=3` fetches pages 5–7. Pages beyond the real result count return empty.
+- **`page_count`** *(integer, optional)*: The number of consecutive pages to fetch starting at `page` (default 1, max: 20 pages). Fetching stops early when pages run out or `min_publish_date` is reached.
 - **`min_publish_date`** *(datetime, optional)*: Stop fetching once a page contains listings published before this datetime. Listings older than the threshold are removed from the final results. Format: `YYYY-MM-DDTHH:MM:SS` (e.g., `2026-05-03T08:00:00`). Useful for intraday runs that should only collect new listings.
 
 ##### Example Requests
@@ -408,8 +409,10 @@ curl -s -X POST http://localhost:8000/inserate-by-url \
   - `is_top_ad` — `true` for paid "TOP" listings pinned above the date-sorted results. They are ignored when `min_publish_date` decides whether to stop paging.
   - `location` — Cleaned location text (zip/city); a trailing `(N km)` distance is stripped into `distance_km`.
   - `distance_km` — Distance in kilometres when the card shows one as `(N km)` or `(N,5 km)`; `null` otherwise.
-- **`unique_results`**: Total number of listings returned across all fetched pages.
+- **`unique_results`**: Total number of unique listings returned across all fetched pages (deduplicated by ad ID).
 - **`total_results`**: Total hits reported by Kleinanzeigen for this search (e.g. `120140`). Extracted from the page breadcrumb on the first page load — no extra request needed.
+- **`total_pages`**: Real page count derived from `total_results`; omitted when the first fetched page is not page 1 (page size is then ambiguous).
+- **`page`** / **`pages_fetched`**: The first page requested and how many pages were actually fetched — smaller than `page_count` when fetching stopped early.
 - **`time_taken`**: Total elapsed time in seconds.
 - **`performance_metrics.pages_requested`** / **`pages_successful`** / **`success_rate`**: Page-level fetch statistics.
 
@@ -459,6 +462,7 @@ curl -X POST http://localhost:8000/convert-url \
 {
   "inserate_params": {
     "query": "klima",
+    "page": 1,
     "page_count": 1
   },
   "unmapped": {
@@ -540,6 +544,7 @@ The `/inserate-detailed` response additionally nests a `details` object inside e
 {
   "inserate_params": {
     "query": "klima",
+    "page": 1,
     "page_count": 1
   },
   "unmapped": {

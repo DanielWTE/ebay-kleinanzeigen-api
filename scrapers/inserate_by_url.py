@@ -6,20 +6,19 @@ Reuses UltraOptimizedScraper for fetching/extraction; only the URL-building diff
 import asyncio
 import gc
 import logging
-import math
 import re
 from datetime import datetime
 from typing import Any
 
 from scrapers.inserate_ultra_optimized import (
+    _dedupe_by_adid,
     _filter_by_min_publish_date,
     _page_has_old_listings,
     create_ultra_optimized_scraper,
 )
+from utils.breadcrumb import TOTAL_RESULTS_SELECTOR, parse_breadcrumb
 from utils.browser import OptimizedPlaywrightManager
 from utils.performance import PerformanceTracker
-
-_TOTAL_RESULTS_SELECTOR = {"breadcrump_summary": ".breadcrump-summary"}
 
 
 def inject_page(url: str, page_num: int) -> str:
@@ -58,29 +57,6 @@ def inject_page(url: str, page_num: int) -> str:
 
     new_path = "/" + "/".join(segments)
     return urlunparse(parsed._replace(path=new_path))
-
-
-def _parse_breadcrumb(breadcrump_text: str) -> tuple[int | None, int | None]:
-    """Parse the breadcrumb summary into (total_results, actual_page_count).
-
-    Kleinanzeigen renders e.g. 'Autos 1 - 25 von 48 Gebrauchtwagen...'
-    Page size is only unambiguous on page 1 (range always starts at 1), so
-    page_count is only computed then; otherwise returns None for page_count.
-    Returns (None, None) if the text cannot be parsed at all.
-    """
-    match = re.search(r"(\d[\d.]*)\s*-\s*(\d[\d.]*)\s+von\s+([\d.]+)", breadcrump_text)
-    if not match:
-        return None, None
-    page_start = int(match.group(1).replace(".", ""))
-    page_end = int(match.group(2).replace(".", ""))
-    total = int(match.group(3).replace(".", ""))
-    if page_start != 1:
-        # Can't derive page size from a partial last-page range
-        return total, None
-    page_size = page_end  # page_end - 1 + 1
-    if page_size <= 0:
-        return total, None
-    return total, math.ceil(total / page_size)
 
 
 async def scrape_by_url(
@@ -124,13 +100,13 @@ async def scrape_by_url(
             result = await scraper.ultra_optimized_fetch_page(
                 inject_page(base_url, page_num),
                 page_num,
-                extra_selectors=_TOTAL_RESULTS_SELECTOR if page_num == 1 else None,
+                extra_selectors=TOTAL_RESULTS_SELECTOR if page_num == 1 else None,
             )
             if not isinstance(result, Exception):
                 page_results, page_metrics, extras = result
 
                 if total_results is None and "breadcrump_summary" in extras:
-                    total_results, actual_max_pages = _parse_breadcrumb(
+                    total_results, actual_max_pages = parse_breadcrumb(
                         extras["breadcrump_summary"]
                     )
                     effective = (
@@ -182,6 +158,8 @@ async def scrape_by_url(
             (successful_pages / pages_attempted) * 100 if pages_attempted > 0 else 0
         )
 
+        all_results = _dedupe_by_adid(all_results)
+
         response = {
             "success": True,
             "results": all_results,
@@ -196,10 +174,13 @@ async def scrape_by_url(
                 ),
             },
             "browser_metrics": browser_metrics,
+            "page": 1,
+            "pages_fetched": pages_attempted,
         }
 
         if total_results is not None:
             response["total_results"] = total_results
+            response["total_pages"] = actual_max_pages
 
         return response
     finally:

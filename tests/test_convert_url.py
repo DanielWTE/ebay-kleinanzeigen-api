@@ -86,12 +86,14 @@ def test_page_number():
     data = post(
         "https://www.kleinanzeigen.de/s-wohnwagen-mobile/wohnwagen/seite:3/c220"
     )
-    assert data["inserate_params"]["page_count"] == 3
+    assert data["inserate_params"]["page"] == 3
+    assert data["inserate_params"]["page_count"] == 1
 
 
 def test_s_seite_page():
     data = post("https://www.kleinanzeigen.de/s-wohnwagen-mobile/s-seite:4/c220")
-    assert data["inserate_params"]["page_count"] == 4
+    assert data["inserate_params"]["page"] == 4
+    assert data["inserate_params"]["page_count"] == 1
 
 
 # ── Single brand ─────────────────────────────────────────────────────────────
@@ -111,6 +113,7 @@ def test_single_brand():
 def test_empty_url_returns_defaults():
     data = post("")
     assert data["inserate_params"]["page_count"] == 1
+    assert data["inserate_params"]["page"] == 1
     assert data["unmapped"] == {}
 
 
