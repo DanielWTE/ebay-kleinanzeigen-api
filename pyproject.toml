@@ -17,9 +17,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.16.0",
     "pre-commit>=4.0.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.4.0",
+    "starlette>=1.10",
 ]
 [tool.ruff.lint]
 ignore = [
@@ -36,7 +38,6 @@ ignore = [
 
 [tool.pytest.ini_options]
 pythonpath = ['.']
-import_mode = 'importlib'
 asyncio_mode = 'auto'
 addopts = '-m "not integration"'
 markers = ['integration: requires a running API server on localhost:8000; run with -m integration']
